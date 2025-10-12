@@ -1,0 +1,608 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B76CA8D12E830F1A00C394F4 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = B76CA8D02E830F1A00C394F4 /* Kingfisher */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B7C0BB0E2E5634D6000B99FB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B7C0BAEF2E5634D5000B99FB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B7C0BAF62E5634D5000B99FB;
+			remoteInfo = AudioPlayerForge;
+		};
+		B7C0BB182E5634D6000B99FB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B7C0BAEF2E5634D5000B99FB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B7C0BAF62E5634D5000B99FB;
+			remoteInfo = AudioPlayerForge;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		B7C0BAF72E5634D5000B99FB /* AudioPlayerForge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AudioPlayerForge.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B7C0BB0D2E5634D6000B99FB /* AudioPlayerForgeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AudioPlayerForgeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B7C0BB172E5634D6000B99FB /* AudioPlayerForgeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AudioPlayerForgeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B7C0BB1F2E5634D6000B99FB /* Exceptions for "AudioPlayerForge" folder in "AudioPlayerForge" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = B7C0BAF62E5634D5000B99FB /* AudioPlayerForge */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		B7C0BAF92E5634D5000B99FB /* AudioPlayerForge */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B7C0BB1F2E5634D6000B99FB /* Exceptions for "AudioPlayerForge" folder in "AudioPlayerForge" target */,
+			);
+			path = AudioPlayerForge;
+			sourceTree = "<group>";
+		};
+		B7C0BB102E5634D6000B99FB /* AudioPlayerForgeTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = AudioPlayerForgeTests;
+			sourceTree = "<group>";
+		};
+		B7C0BB1A2E5634D6000B99FB /* AudioPlayerForgeUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = AudioPlayerForgeUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		B7C0BAF42E5634D5000B99FB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B76CA8D12E830F1A00C394F4 /* Kingfisher in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B7C0BB0A2E5634D6000B99FB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B7C0BB142E5634D6000B99FB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		B7C0BAEE2E5634D5000B99FB = {
+			isa = PBXGroup;
+			children = (
+				B7C0BAF92E5634D5000B99FB /* AudioPlayerForge */,
+				B7C0BB102E5634D6000B99FB /* AudioPlayerForgeTests */,
+				B7C0BB1A2E5634D6000B99FB /* AudioPlayerForgeUITests */,
+				B7C0BAF82E5634D5000B99FB /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		B7C0BAF82E5634D5000B99FB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B7C0BAF72E5634D5000B99FB /* AudioPlayerForge.app */,
+				B7C0BB0D2E5634D6000B99FB /* AudioPlayerForgeTests.xctest */,
+				B7C0BB172E5634D6000B99FB /* AudioPlayerForgeUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B7C0BAF62E5634D5000B99FB /* AudioPlayerForge */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B7C0BB202E5634D6000B99FB /* Build configuration list for PBXNativeTarget "AudioPlayerForge" */;
+			buildPhases = (
+				B7C0BAF32E5634D5000B99FB /* Sources */,
+				B7C0BAF42E5634D5000B99FB /* Frameworks */,
+				B7C0BAF52E5634D5000B99FB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				B7C0BAF92E5634D5000B99FB /* AudioPlayerForge */,
+			);
+			name = AudioPlayerForge;
+			packageProductDependencies = (
+				B76CA8D02E830F1A00C394F4 /* Kingfisher */,
+			);
+			productName = AudioPlayerForge;
+			productReference = B7C0BAF72E5634D5000B99FB /* AudioPlayerForge.app */;
+			productType = "com.apple.product-type.application";
+		};
+		B7C0BB0C2E5634D6000B99FB /* AudioPlayerForgeTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B7C0BB252E5634D6000B99FB /* Build configuration list for PBXNativeTarget "AudioPlayerForgeTests" */;
+			buildPhases = (
+				B7C0BB092E5634D6000B99FB /* Sources */,
+				B7C0BB0A2E5634D6000B99FB /* Frameworks */,
+				B7C0BB0B2E5634D6000B99FB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B7C0BB0F2E5634D6000B99FB /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B7C0BB102E5634D6000B99FB /* AudioPlayerForgeTests */,
+			);
+			name = AudioPlayerForgeTests;
+			packageProductDependencies = (
+			);
+			productName = AudioPlayerForgeTests;
+			productReference = B7C0BB0D2E5634D6000B99FB /* AudioPlayerForgeTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		B7C0BB162E5634D6000B99FB /* AudioPlayerForgeUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B7C0BB282E5634D6000B99FB /* Build configuration list for PBXNativeTarget "AudioPlayerForgeUITests" */;
+			buildPhases = (
+				B7C0BB132E5634D6000B99FB /* Sources */,
+				B7C0BB142E5634D6000B99FB /* Frameworks */,
+				B7C0BB152E5634D6000B99FB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B7C0BB192E5634D6000B99FB /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B7C0BB1A2E5634D6000B99FB /* AudioPlayerForgeUITests */,
+			);
+			name = AudioPlayerForgeUITests;
+			packageProductDependencies = (
+			);
+			productName = AudioPlayerForgeUITests;
+			productReference = B7C0BB172E5634D6000B99FB /* AudioPlayerForgeUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B7C0BAEF2E5634D5000B99FB /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1640;
+				LastUpgradeCheck = 1640;
+				TargetAttributes = {
+					B7C0BAF62E5634D5000B99FB = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					B7C0BB0C2E5634D6000B99FB = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = B7C0BAF62E5634D5000B99FB;
+					};
+					B7C0BB162E5634D6000B99FB = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = B7C0BAF62E5634D5000B99FB;
+					};
+				};
+			};
+			buildConfigurationList = B7C0BAF22E5634D5000B99FB /* Build configuration list for PBXProject "AudioPlayerForge" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = B7C0BAEE2E5634D5000B99FB;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B76CA8CF2E830F1A00C394F4 /* XCRemoteSwiftPackageReference "Kingfisher" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = B7C0BAF82E5634D5000B99FB /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B7C0BAF62E5634D5000B99FB /* AudioPlayerForge */,
+				B7C0BB0C2E5634D6000B99FB /* AudioPlayerForgeTests */,
+				B7C0BB162E5634D6000B99FB /* AudioPlayerForgeUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		B7C0BAF52E5634D5000B99FB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B7C0BB0B2E5634D6000B99FB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B7C0BB152E5634D6000B99FB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		B7C0BAF32E5634D5000B99FB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B7C0BB092E5634D6000B99FB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B7C0BB132E5634D6000B99FB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B7C0BB0F2E5634D6000B99FB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B7C0BAF62E5634D5000B99FB /* AudioPlayerForge */;
+			targetProxy = B7C0BB0E2E5634D6000B99FB /* PBXContainerItemProxy */;
+		};
+		B7C0BB192E5634D6000B99FB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B7C0BAF62E5634D5000B99FB /* AudioPlayerForge */;
+			targetProxy = B7C0BB182E5634D6000B99FB /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		B7C0BB212E5634D6000B99FB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 37FF3DT9JG;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AudioPlayerForge/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.hevsoft.AudioPlayerForge;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B7C0BB222E5634D6000B99FB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 37FF3DT9JG;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AudioPlayerForge/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.hevsoft.AudioPlayerForge;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		B7C0BB232E5634D6000B99FB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 37FF3DT9JG;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		B7C0BB242E5634D6000B99FB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 37FF3DT9JG;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		B7C0BB262E5634D6000B99FB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 37FF3DT9JG;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.hevsoft.AudioPlayerForgeTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AudioPlayerForge.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AudioPlayerForge";
+			};
+			name = Debug;
+		};
+		B7C0BB272E5634D6000B99FB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 37FF3DT9JG;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.hevsoft.AudioPlayerForgeTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AudioPlayerForge.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AudioPlayerForge";
+			};
+			name = Release;
+		};
+		B7C0BB292E5634D6000B99FB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 37FF3DT9JG;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.hevsoft.AudioPlayerForgeUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = AudioPlayerForge;
+			};
+			name = Debug;
+		};
+		B7C0BB2A2E5634D6000B99FB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 37FF3DT9JG;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = net.hevsoft.AudioPlayerForgeUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = AudioPlayerForge;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B7C0BAF22E5634D5000B99FB /* Build configuration list for PBXProject "AudioPlayerForge" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B7C0BB232E5634D6000B99FB /* Debug */,
+				B7C0BB242E5634D6000B99FB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B7C0BB202E5634D6000B99FB /* Build configuration list for PBXNativeTarget "AudioPlayerForge" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B7C0BB212E5634D6000B99FB /* Debug */,
+				B7C0BB222E5634D6000B99FB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B7C0BB252E5634D6000B99FB /* Build configuration list for PBXNativeTarget "AudioPlayerForgeTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B7C0BB262E5634D6000B99FB /* Debug */,
+				B7C0BB272E5634D6000B99FB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B7C0BB282E5634D6000B99FB /* Build configuration list for PBXNativeTarget "AudioPlayerForgeUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B7C0BB292E5634D6000B99FB /* Debug */,
+				B7C0BB2A2E5634D6000B99FB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B76CA8CF2E830F1A00C394F4 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.5.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B76CA8D02E830F1A00C394F4 /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B76CA8CF2E830F1A00C394F4 /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = B7C0BAEF2E5634D5000B99FB /* Project object */;
+}

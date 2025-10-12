@@ -1,7 +1,7 @@
 name: media
 description: "Media plugin"
 version: 0.0.1
-homepage:
+homepage: hevsoft.go.ro
 
 environment:
   sdk: ^3.8.1
@@ -11,6 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
+  uuid:
 
 dev_dependencies:
   flutter_test:
@@ -36,11 +37,9 @@ flutter:
     platforms:
       android:
         package: net.hevsoft.media
-        pluginClass: MediaPlugin
+        pluginClass: MediaPlugin #If you get errors, make sure this class exists on Android
       ios:
-        pluginClass: MediaPlugin
-      linux:
-        pluginClass: MediaPlugin
+        pluginClass: AudioPlayerPlugin
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:
