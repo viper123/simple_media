@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter/services.dart';
 import 'package:media/error_codes.dart';
@@ -7,7 +8,9 @@ import 'package:uuid/uuid.dart';
 
 class AudioPlayer {
 
-  AudioPlayer();
+  AudioPlayer() {
+    Log.installLogger(_AudioPlayerLogger());
+  }
 
   bool _initialized = false;
 
@@ -106,7 +109,7 @@ class AudioPlayer {
               Log.e(Error.fromCode(ErrorCode.invalidProgressMsValue));
             }
           } else {
-            Log.e(Error.fromCode(ErrorCode.incorrectPlatformReturnType));
+            Log.e(errorContext: "progress", Error.fromCode(ErrorCode.incorrectPlatformReturnType));
           }
           break;
         }
@@ -269,6 +272,20 @@ extension SafeMethodChannel on MethodChannel {
       return await invokeMethod<T>(method, arguments);
     } catch (e) {
       return null;
+    }
+  }
+}
+
+class _AudioPlayerLogger implements Logger {
+  @override
+  void logM(String message) {
+    log("[MediaPlugin][D] $message");
+  }
+  @override
+  void logE(Error error, String? errorContext) {
+    if (errorContext != null) {
+      log("[MediaPlugin][E] Error context: $errorContext, "
+          "Error: ${error.errorMeaning}");
     }
   }
 }

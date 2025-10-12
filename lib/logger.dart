@@ -1,34 +1,22 @@
 
-import 'package:flutter/foundation.dart';
 import 'package:media/error_codes.dart';
 
 abstract class Logger {
   void logM(String message);
-  void logE(Error error);
+  void logE(Error error, String? errorContext);
 }
 
 class Log {
-  static Logger _logger = DebugLogger();
+  static Logger? _logger;
 
   static void installLogger(Logger newLogger) {
     _logger = newLogger;
   }
 
   static void m(String message) {
-    _logger.logM(message);
+    _logger?.logM(message);
   }
-  static void e(Error error) {
-    _logger.logE(error);
-  }
-}
-
-class DebugLogger implements Logger {
-  @override
-  void logM(String message) {
-    debugPrint("[Logger][D] $message");
-  }
-  @override
-  void logE(Error error) {
-    debugPrint("[Logger][E] ${error.errorMeaning}");
+  static void e(Error error, {String? errorContext}) {
+    _logger?.logE(error, errorContext);
   }
 }

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+flutter clean
+
+flutter pub get
+
+cd example
+flutter clean
+
+flutter pub get
