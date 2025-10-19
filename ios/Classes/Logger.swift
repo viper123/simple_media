@@ -41,7 +41,7 @@ class Log {
 
 class DefaultiOSLogger : Logger {
     func log(_ message: String) {
-        print(message)
+        debugPrint(message)
     }
     
 }

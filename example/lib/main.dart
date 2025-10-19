@@ -7,7 +7,6 @@ void main() {
   runApp(const MyApp());
 }
 
-//TODO copy already created AudioPlayer files here, implement ui to test music, update sync script
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -34,6 +33,11 @@ class _PlayerPageState extends State<PlayerPage> {
   bool isPlaying = false;
   int currentTrackIndex = 0;
   final AudioPlayer _player = AudioPlayer();
+
+  // Progress state
+  double currentPosition = 0.0; // in seconds
+  double totalDuration = 0.0; // in seconds (3 minutes for demo)
+  bool isScrubbing = false;
 
   // Sample playlist data
   final List<AudioItem> playlist = [
@@ -70,7 +74,29 @@ class _PlayerPageState extends State<PlayerPage> {
   void initState() {
     super.initState();
 
-    _player.init().then((initialized) async {
+    _player.init(enableNativeLogs: true).then((initialized) async {
+      _player.durationStream.distinct().listen((duration) {
+        setState(() {
+          totalDuration = duration?.inSeconds.toDouble() ?? 0.0;
+        });
+      });
+
+      _player.progressStream.distinct().listen((duration) {
+        setState(() {
+          log("Current progress: $duration");
+          currentPosition = duration.inSeconds.toDouble();
+        });
+      });
+
+      _player.activeIndex.distinct().listen((index) {
+        setState(() {
+          if (index != invalidActiveIndex) {
+            log("Active index changed: $index");
+            currentTrackIndex = index;
+          }
+        });
+      });
+
       final loaded = await _player.loadPlaylist(playlist);
       log("Playlist loaded: $loaded");
     });
@@ -116,6 +142,27 @@ class _PlayerPageState extends State<PlayerPage> {
     });
   }
 
+  void onSeekStart(double value) {
+    setState(() {
+      isScrubbing = true;
+    });
+  }
+
+  void onSeekEnd(double value) {
+    setState(() {
+      isScrubbing = false;
+      currentPosition = value;
+
+      _player.seekTo(Duration(seconds: value.toInt()));
+    });
+  }
+
+  String formatDuration(double seconds) {
+    final int minutes = seconds ~/ 60;
+    final int remainingSeconds = (seconds % 60).toInt();
+    return '${minutes.toString().padLeft(1, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentTrack = playlist[currentTrackIndex];
@@ -123,10 +170,7 @@ class _PlayerPageState extends State<PlayerPage> {
     return Scaffold(
       backgroundColor: Colors.grey[900],
       appBar: AppBar(
-        title: const Text(
-          'Music Player',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Music Player'),
         backgroundColor: Colors.black,
         elevation: 0,
       ),
@@ -144,7 +188,7 @@ class _PlayerPageState extends State<PlayerPage> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.5),
+                      color: Colors.black.withAlpha(128),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -190,6 +234,63 @@ class _PlayerPageState extends State<PlayerPage> {
               ),
               const SizedBox(height: 50),
 
+              // Progress Slider
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Column(
+                  children: [
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        trackHeight: 4.0,
+                        thumbShape: const RoundSliderThumbShape(
+                          enabledThumbRadius: 8.0,
+                        ),
+                        overlayShape: const RoundSliderOverlayShape(
+                          overlayRadius: 16.0,
+                        ),
+                        activeTrackColor: Colors.blue,
+                        inactiveTrackColor: Colors.grey[800],
+                        thumbColor: Colors.blue,
+                        overlayColor: Colors.blue.withAlpha(51),
+                      ),
+                      child: Slider(
+                        value: currentPosition.clamp(0.0, totalDuration),
+                        min: 0.0,
+                        max: totalDuration,
+                        onChanged: (s) {
+                          /*ignored*/
+                        },
+                        onChangeStart: onSeekStart,
+                        onChangeEnd: onSeekEnd,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            formatDuration(currentPosition),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[400],
+                            ),
+                          ),
+                          Text(
+                            formatDuration(totalDuration),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[400],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 30),
+
               // Control Buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -217,7 +318,7 @@ class _PlayerPageState extends State<PlayerPage> {
                       color: Colors.blue,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.blue.withValues(alpha: 0.4),
+                          color: Colors.blue.withAlpha(102),
                           blurRadius: 15,
                           offset: const Offset(0, 5),
                         ),

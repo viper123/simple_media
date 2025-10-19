@@ -400,11 +400,8 @@ class AudioPlayer : AudioPlayerInstance {
         
         playbackIndex = newIndex
         
-        if (newIndex != INVALID_INDEX) {
-            updateMetadata(playlist[newIndex])
-        }
-        
         if (playbackIndex != INVALID_INDEX) {
+            updateMetadata(playlist[newIndex])
             activeIndexListener?(playbackIndex)
             updateDuration()
         }
@@ -520,13 +517,13 @@ class AudioPlayer : AudioPlayerInstance {
         innerPlayer.pause()
         stopProgressUpdates()
         updatePlaybackState(newState: .paused)
-        updateNowPlayingPlaybackRate()
     }
     
     func stop() {
         pause()
         rebuildQueueFromIndex(0)
         innerPlayer.seek(to: .zero)
+        updateProgress()
         updatePlaybackState(newState: .idle)
         updateNowPlayingPlaybackRate()
     }
@@ -669,21 +666,25 @@ class AudioPlayer : AudioPlayerInstance {
     }
     
     private func updateProgress() {
-        guard let currentItem = innerPlayer.currentItem,
-              let progressClosure = playbackProgressListener else {
+        Log.log(tag: tag, "updateProgress")
+        guard let progressClosure = playbackProgressListener else {
             return
         }
         
         let currentTime = innerPlayer.currentTime()
-        let duration = currentItem.duration
-        
+        guard let currentDuration = duration else {
+            Log.log(tag: tag, "currentDuration is null")
+            return
+        }
+                
         // Only update if we have valid time values
         guard currentTime.isValid && !currentTime.isIndefinite else {
+            Log.log(tag: tag, "updateProgress: currentTime is invalid")
             return
         }
         
         let currentMs = currentTime.seconds * 1000.0
-        guard let durationMs = duration.isValid && duration.isNumeric ? duration.seconds * 1000.0 : nil else {
+        guard let durationMs = currentDuration.isValid && currentDuration.isNumeric ? currentDuration.seconds * 1000.0 : nil else {
             Log.log(tag: tag, "Unable to extract duration")
             return
         }

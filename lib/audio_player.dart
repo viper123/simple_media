@@ -7,7 +7,6 @@ import 'package:media/logger.dart';
 import 'package:uuid/uuid.dart';
 
 class AudioPlayer {
-
   AudioPlayer() {
     Log.installLogger(_AudioPlayerLogger());
   }
@@ -38,13 +37,21 @@ class AudioPlayer {
 
   Stream<Duration> get progressStream => _progressController.stream;
 
-  Future<bool> init() async {
+  final _durationController = StreamController<Duration?>.broadcast();
+
+  Stream<Duration?> get durationStream => _durationController.stream;
+
+  Future<bool> init({bool enableNativeLogs = false}) async {
     if (_initialized) {
       return true;
     }
 
     final cc = const MethodChannel('media-comm-creator');
     final id = Uuid().v4();
+
+    if (enableNativeLogs) {
+      await cc.invokeMethod('enableLogs');
+    }
 
     final initialized = await cc.invokeMethod("init", id);
 
@@ -102,14 +109,38 @@ class AudioPlayer {
       case "progress":
         {
           final safeArgument = call.arguments;
-          if (safeArgument is int) {
+          if (safeArgument is double) {
             if (safeArgument >= 0) {
-              _progressController.add(Duration(milliseconds: safeArgument));
+              _progressController.add(
+                Duration(milliseconds: safeArgument.toInt()),
+              );
             } else {
               Log.e(Error.fromCode(ErrorCode.invalidProgressMsValue));
             }
           } else {
-            Log.e(errorContext: "progress", Error.fromCode(ErrorCode.incorrectPlatformReturnType));
+            Log.e(
+              errorContext: "progress",
+              Error.fromCode(ErrorCode.incorrectPlatformReturnType),
+            );
+          }
+          break;
+        }
+      case "duration":
+        {
+          final safeArgument = call.arguments;
+          if (safeArgument is double) {
+            if (safeArgument >= 0) {
+              _durationController.add(
+                Duration(milliseconds: safeArgument.toInt()),
+              );
+            } else {
+              Log.e(Error.fromCode(ErrorCode.invalidDurationMsValue));
+            }
+          } else {
+            Log.e(
+              errorContext: "duration",
+              Error.fromCode(ErrorCode.incorrectPlatformReturnType),
+            );
           }
           break;
         }
@@ -121,14 +152,17 @@ class AudioPlayer {
     if (ms == null) {
       return null;
     }
-    if (ms is int) {
+    if (ms is double) {
       if (ms >= 0) {
-        return Duration(milliseconds: ms);
+        return Duration(milliseconds: ms.toInt());
       } else {
         Log.e(Error.fromCode(ErrorCode.invalidDurationMsValue));
       }
     } else {
-      Log.e(Error.fromCode(ErrorCode.incorrectPlatformReturnType));
+      Log.e(
+        errorContext: "getDuration",
+        Error.fromCode(ErrorCode.incorrectPlatformReturnType),
+      );
     }
     return null;
   }
@@ -147,12 +181,13 @@ class AudioPlayer {
       };
     }).toList();
 
+    _audioSource.clear();
+    _audioSource.addAll(items);
+
     bool? updated = await _mc.safeInvokeMethod('loadPlaylist', playlistMaps);
 
-    if (updated == true) {
+    if (!(updated ?? false)) {
       _audioSource.clear();
-      _audioSource.addAll(items);
-    } else {
       Log.e(Error.fromCode(ErrorCode.playlistNotUpdatedOnNative));
     }
 
@@ -281,11 +316,16 @@ class _AudioPlayerLogger implements Logger {
   void logM(String message) {
     log("[MediaPlugin][D] $message");
   }
+
   @override
   void logE(Error error, String? errorContext) {
     if (errorContext != null) {
-      log("[MediaPlugin][E] Error context: $errorContext, "
-          "Error: ${error.errorMeaning}");
+      log(
+        "[MediaPlugin][E] Error context: $errorContext, "
+        "Error: ${error.errorMeaning}",
+      );
+    } else {
+      log("[MediaPlugin][E] Error: ${error.errorMeaning}");
     }
   }
 }

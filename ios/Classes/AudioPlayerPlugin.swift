@@ -40,6 +40,9 @@ public class AudioPlayerPlugin: NSObject, FlutterPlugin {
             let playerWrapper = AudioPlayerWrapper(id: id, messenger: registrar.messenger(), registry: playerRegistry);
             playerRegistry.registerAudioPlayer(id: id, player: playerWrapper)
             result(true)
+        case "enableLogs":
+            Log.installLogger(DefaultiOSLogger())
+            result(true)
         default:
             result(FlutterMethodNotImplemented)
         }

@@ -31,12 +31,23 @@ class AudioPlayerWrapper : AudioPlayerInstance {
         innerPlayer.setPlaybackProgressListener { [weak self] p, d in
             guard let c = self?.channel else { return }
             c.invokeMethod("progress", arguments: p)
+            c.invokeMethod("duration", arguments: d)
+        }
+        
+        innerPlayer.setDurationListener { [weak self] d in
+            guard let c = self?.channel else { return }
+            c.invokeMethod("duration", arguments: d)
         }
         
         innerPlayer.setPlaybackStateListener { [weak self] s in
             guard let c = self?.channel else { return }
             
             c.invokeMethod("playbackState", arguments: s.index)
+        }
+        
+        innerPlayer.setActiveIndexListener{[weak self] index in
+            guard let c = self?.channel else { return }
+            c.invokeMethod("activeIndex", arguments: index)
         }
         
         innerPlayer.setErrorListener { [weak self] code, msg in
@@ -46,7 +57,16 @@ class AudioPlayerWrapper : AudioPlayerInstance {
 
         channel.setMethodCallHandler { (call, result) in
             switch call.method {
-            case "getDuration": result(self.innerPlayer.duration)
+            case "getDuration":
+                guard let duration = self.innerPlayer.duration else {
+                    result(nil)
+                    return
+                }
+                guard let durationMs = duration.isValid && duration.isNumeric ? duration.seconds * 1000.0 : nil else {
+                    result(nil)
+                    return
+                }
+                result(durationMs)
             case "loadPlaylist":
                 let p = AudioPlayer.parsePlaylist(from: call.arguments)
                 let success = self.innerPlayer.loadPlaylist(p)
@@ -69,15 +89,14 @@ class AudioPlayerWrapper : AudioPlayerInstance {
                     result(false)
                     return
                 }
-                guard let pos = args["position"] as? Int else {
+                let pos = args["position"] as? Int
+                let index = args["index"] as? Int
+                if (index == nil && pos == nil) {
                     result(false)
                     return
                 }
-                guard let index = args["index"] as? Int else {
-                    result(false)
-                    return
-                }
-                let time = CMTime(milliseconds: pos)
+                
+                let time = pos != nil ? CMTime(milliseconds: pos!) : nil
                 self.innerPlayer.seek(to: index, at: time)
                 result(true)
                 
