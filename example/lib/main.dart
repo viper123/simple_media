@@ -88,7 +88,7 @@ class _PlayerPageState extends State<PlayerPage> {
         });
       });
 
-      _player.activeIndex.distinct().listen((index) {
+      _player.activeIndexStream.distinct().listen((index) {
         setState(() {
           if (index != invalidActiveIndex) {
             log("Active index changed: $index");

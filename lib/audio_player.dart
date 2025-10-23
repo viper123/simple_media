@@ -23,7 +23,9 @@ class AudioPlayer {
 
   final _activeIndexController = StreamController<int>.broadcast();
 
-  Stream<int> get activeIndex => _activeIndexController.stream;
+  Stream<int> get activeIndexStream => _activeIndexController.stream;
+
+  int activeIndex = invalidActiveIndex;
 
   final _errorController = StreamController<Error>.broadcast();
 
@@ -71,9 +73,11 @@ class AudioPlayer {
           final safeArgument = call.arguments;
           if (safeArgument is int) {
             if (safeArgument < 0 || safeArgument >= _audioSource.length) {
+              activeIndex = invalidActiveIndex;
               _activeIndexController.add(invalidActiveIndex);
               return;
             }
+            activeIndex = safeArgument;
             _activeIndexController.add(safeArgument);
           } else {
             Log.e(Error.fromCode(ErrorCode.incorrectPlatformReturnType));
@@ -194,7 +198,7 @@ class AudioPlayer {
     return updated == true;
   }
 
-  Future<void> play() async {
+  Future<bool> play() async {
     final processed = await _mc.safeInvokeMethod('play');
     if (processed is bool) {
       if (!processed) {
@@ -208,9 +212,10 @@ class AudioPlayer {
     } else {
       Log.e(Error.fromCode(ErrorCode.incorrectPlatformReturnType));
     }
+    return processed;
   }
 
-  Future<void> pause() async {
+  Future<bool> pause() async {
     final processed = await _mc.safeInvokeMethod('pause');
     if (processed is bool) {
       if (!processed) {
@@ -224,6 +229,7 @@ class AudioPlayer {
     } else {
       Log.e(Error.fromCode(ErrorCode.incorrectPlatformReturnType));
     }
+    return processed;
   }
 
   Future<void> stop() async {
@@ -242,7 +248,7 @@ class AudioPlayer {
     }
   }
 
-  Future<void> seekTo(Duration position, {int? index}) async {
+  Future<bool> seekTo(Duration position, {int? index}) async {
     final processed = await _mc.safeInvokeMethod('seekTo', {
       'position': position.inMilliseconds,
       'index': index,
@@ -256,22 +262,36 @@ class AudioPlayer {
           ),
         );
       }
+      return processed;
     } else {
       Log.e(Error.fromCode(ErrorCode.incorrectPlatformReturnType));
     }
+
+    return false;
+  }
+
+  Future<bool> next() async {
+    return await _mc.safeInvokeMethod('next');
+  }
+
+  Future<bool> previous() async {
+    return await _mc.safeInvokeMethod('prev');
   }
 
   void dispose() {
-    try {
-      _mc.invokeMethod('dispose');
-    } catch (e) {
-      Log.e(Error.fromCode(ErrorCode.playbackMethodNotExecutedOnNative));
+    if (isInitialized) {
+      try {
+        _mc.invokeMethod('dispose');
+      } catch (e) {
+        Log.e(Error.fromCode(ErrorCode.playbackMethodNotExecutedOnNative));
+      }
+      _mc.setMethodCallHandler(null);
     }
-    _mc.setMethodCallHandler(null);
     _activeIndexController.close();
     _errorController.close();
     _playbackController.close();
     _progressController.close();
+    _durationController.close();
   }
 }
 

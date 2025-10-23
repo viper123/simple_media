@@ -14,10 +14,9 @@ import MediaPlayer
 import Foundation
 
 private let INVALID_INDEX: Int = -1
+private let tag = "[AudioPlayer]"
+
 class AudioPlayer : AudioPlayerInstance {
-    
-    private let tag = "[AudioPlayer]"
-    
     //MARK: Properties
     private var disposed = false
     private var playlist: [AudioItem] = []
@@ -71,8 +70,11 @@ class AudioPlayer : AudioPlayerInstance {
         // Enable next track command
         commandCenter.nextTrackCommand.addTarget { [weak self] event in
             if self?.isForwardPossible() == true {
-                self?.moveForward()
-                return .success
+                let movedForward = self?.moveForward()
+                if (!(movedForward ?? false)) {
+                    Log.log(tag: tag, "Warning: Failed to move forward in playlist")
+                }
+                return movedForward == true ? .success : .commandFailed
             }
             return .noActionableNowPlayingItem
         }
@@ -80,8 +82,11 @@ class AudioPlayer : AudioPlayerInstance {
         // Enable previous track command
         commandCenter.previousTrackCommand.addTarget { [weak self] event in
             if self?.isBackwardsPossible() == true {
-                self?.moveBackward()
-                return .success
+                let movedBackward = self?.moveBackward()
+                if (!(movedBackward ?? false)) {
+                    Log.log(tag: tag, "Warning: Failed to move backward in playlist")
+                }
+                return movedBackward == true ? .success : .commandFailed
             }
             return .noActionableNowPlayingItem
         }
@@ -90,8 +95,11 @@ class AudioPlayer : AudioPlayerInstance {
         commandCenter.changePlaybackPositionCommand.addTarget { [weak self] event in
             if let event = event as? MPChangePlaybackPositionCommandEvent {
                 let time = CMTime(seconds: event.positionTime, preferredTimescale: 600)
-                self?.seek(to: nil, at: time)
-                return .success
+                let seeked = self?.seek(to: nil, at: time)
+                if (!(seeked ?? false)) {
+                    Log.log(tag: tag, "Warning: Failed to seek to new position in audio player")
+                }
+                return seeked == true ? .success : .commandFailed
             }
             return .commandFailed
         }
@@ -430,7 +438,7 @@ class AudioPlayer : AudioPlayerInstance {
     private func updateMetadata(_ item: AudioItem) {
         let rate = innerPlayer.rate
         Task { [rate] in
-
+            
             var nowPlayingInfo: [String: Any] = [:]
             
             // Basic metadata
@@ -529,16 +537,16 @@ class AudioPlayer : AudioPlayerInstance {
     }
     
     //MARK: Seek
-    func moveForward() {
+    func moveForward() -> Bool {
         if (playbackIndex == INVALID_INDEX) {
-            return
+            return false
         }
         
         if (!isForwardPossible()) {
-            return
+            return false
         }
         
-        seek(to: playbackIndex + 1)
+        return seek(to: playbackIndex + 1)
     }
     
     func isForwardPossible() -> Bool {
@@ -550,16 +558,16 @@ class AudioPlayer : AudioPlayerInstance {
         return newIndex >= 0 && newIndex < playlist.count
     }
     
-    func moveBackward() {
+    func moveBackward() -> Bool {
         if (playbackIndex == INVALID_INDEX) {
-            return
+            return false
         }
         
         if (!isBackwardsPossible()) {
-            return
+            return false
         }
         
-        seek(to: playbackIndex - 1)
+        return seek(to: playbackIndex - 1)
     }
     
     func isBackwardsPossible() -> Bool {
@@ -571,10 +579,10 @@ class AudioPlayer : AudioPlayerInstance {
         return newIndex >= 0 && newIndex < playlist.count
     }
     
-    func seek(to index:Int? = nil, at time:CMTime? = nil) {
+    func seek(to index:Int? = nil, at time:CMTime? = nil) -> Bool {
         if (disposed) {
             Log.log(tag: tag, "Impossible to seek , player is already disposed")
-            return
+            return false;
         }
         if let newIndex = index {
             let currentItems = playlist
@@ -582,7 +590,7 @@ class AudioPlayer : AudioPlayerInstance {
             guard newIndex >= 0 && newIndex < currentItems.count else {
                 let errorMsg = "Invalid index: \(newIndex). Valid range: 0-\(currentItems.count - 1)"
                 Log.log(tag: tag, errorMsg)
-                return
+                return false;
             }
             
             let currentIndex = self.playbackIndex
@@ -612,6 +620,8 @@ class AudioPlayer : AudioPlayerInstance {
                 self?.updateNowPlayingPlaybackRate()
             }
         }
+        
+        return true;
     }
     
     private func rebuildQueueFromIndex(_ startIndex: Int) {
@@ -676,7 +686,7 @@ class AudioPlayer : AudioPlayerInstance {
             Log.log(tag: tag, "currentDuration is null")
             return
         }
-                
+        
         // Only update if we have valid time values
         guard currentTime.isValid && !currentTime.isIndefinite else {
             Log.log(tag: tag, "updateProgress: currentTime is invalid")
