@@ -3,6 +3,7 @@ version = "1.0-SNAPSHOT"
 
 buildscript {
     ext.kotlin_version = "2.1.0"
+    ext.protobufVersion = '0.9.5'
     repositories {
         google()
         mavenCentral()
@@ -11,6 +12,7 @@ buildscript {
     dependencies {
         classpath("com.android.tools.build:gradle:8.7.3")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version")
+        classpath "com.google.protobuf:protobuf-gradle-plugin:$protobufVersion"
     }
 }
 
@@ -23,9 +25,11 @@ allprojects {
 
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
+apply plugin: "com.google.protobuf"
 
 android {
     namespace = "net.hevsoft.media"
+    ndkVersion = flutter.ndkVersion
 
     compileSdk = 35
 
@@ -41,13 +45,40 @@ android {
     sourceSets {
         main.java.srcDirs += "src/main/kotlin"
         test.java.srcDirs += "src/test/kotlin"
+        main {
+            proto {
+                srcDir 'src/main/proto'
+            }
+        }
     }
 
     defaultConfig {
         minSdk = 21
     }
 
+    protobuf {
+        protoc {
+            artifact = "com.google.protobuf:protoc:4.31.1"
+        }
+        generateProtoTasks {
+            all().each { task ->
+                task.builtins {
+                    java {
+                        option 'lite'
+                    }
+                }
+            }
+        }
+    }
+
     dependencies {
+        implementation 'com.google.protobuf:protobuf-javalite:4.33.2'
+        implementation 'androidx.media3:media3-session:1.8.0'
+        implementation 'androidx.media3:media3-exoplayer:1.8.0'
+        implementation 'androidx.media3:media3-ui:1.8.0'
+        implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.10.2'
+        implementation 'androidx.datastore:datastore:1.1.7'
+
         testImplementation("org.jetbrains.kotlin:kotlin-test")
         testImplementation("org.mockito:mockito-core:5.0.0")
     }

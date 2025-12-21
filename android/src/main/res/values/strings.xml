@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">androidmedia</string>
+    <string name="notification_content_title">Playback cannot be resumed</string>
+    <string name="notification_content_text">Press on the play button on the media notification if it
+    is still present, otherwise please open the app to start the playback and re-connect the session
+    to the controller</string>
+    <string name="notification_channel_name">Playback cannot be resumed</string>
+    <string name="controls_shuffle_on_description">Disable shuffle mode</string>
+    <!-- Accessibility description for a button that controls the shuffle mode of media playback. In this mode shuffle is off. If the user clicks the button, shuffle mode will be turned on. [CHAR LIMIT=NONE] -->
+    <string name="controls_shuffle_off_description">Enable shuffle mode</string>
+    <!-- Accessibility description for a media control button that toggles whether a video playback is in VR mode. [CHAR LIMIT=NONE] -->
+    <string name="controls_vr_description">VR mode</string>
+    <!-- Accessibility description for a closed captions (subtitles) button, when subtitles are enabled. If the user clicks the button, closed captions will be disabled. [CHAR_LIMIT=NONE] -->
+    <string name="controls_cc_enabled_description">Disable subtitles</string>
+    <!-- Accessibility description for a closed captions (subtitles) button, when subtitles are disabled. If the user clicks the button, closed captions will be enabled. [CHAR_LIMIT=NONE] -->
+    <string name="controls_cc_disabled_description">Enable subtitles</string>
+    <!-- Accessibility description for a playback speed selection button. The button is shown with the current playback speed. If a user clicks it, the list of possible playback speeds will be shown. [CHAR_LIMIT=NONE] -->
+    <string name="controls_playback_speed">Speed</string>
+</resources>
