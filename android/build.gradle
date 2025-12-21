@@ -4,6 +4,8 @@ version = "1.0-SNAPSHOT"
 buildscript {
     ext.kotlin_version = "2.1.0"
     ext.protobufVersion = '0.9.5'
+    ext.media3 = '1.8.0'
+
     repositories {
         google()
         mavenCentral()
@@ -73,9 +75,9 @@ android {
 
     dependencies {
         implementation 'com.google.protobuf:protobuf-javalite:4.33.2'
-        implementation 'androidx.media3:media3-session:1.8.0'
-        implementation 'androidx.media3:media3-exoplayer:1.8.0'
-        implementation 'androidx.media3:media3-ui:1.8.0'
+        implementation "androidx.media3:media3-session:$media3"
+        implementation "androidx.media3:media3-exoplayer:$media3"
+        implementation "androidx.media3:media3-ui:$media3"
         implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.10.2'
         implementation 'androidx.datastore:datastore:1.1.7'
 
