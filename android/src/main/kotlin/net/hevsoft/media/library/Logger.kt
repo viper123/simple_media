@@ -21,6 +21,10 @@ object AudioLibLog {
     fun e(tag: String, message: String?, e: Throwable?) {
         logger?.e(tag, message, e)
     }
+
+    fun e(tag : String, message : String) {
+        logger?.e(tag, message, null)
+    }
 }
 
 interface Logger {

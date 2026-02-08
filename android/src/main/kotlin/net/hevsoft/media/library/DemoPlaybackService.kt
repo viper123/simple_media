@@ -33,6 +33,7 @@ import net.hevsoft.androidmedia.Preferences
 import net.hevsoft.media.R
 import java.io.InputStream
 import java.io.OutputStream
+import android.content.Intent
 
 /**
  * Further improvements:
@@ -102,6 +103,11 @@ open class DemoPlaybackService : MediaLibraryService() {
                             MediaConstants.EXTRAS_KEY_SLOT_RESERVATION_SEEK_TO_NEXT to true,
                         )
                 }
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        stopSelf()
     }
 
     /**

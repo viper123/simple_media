@@ -76,6 +76,7 @@ class _PlayerPageState extends State<PlayerPage> {
 
     _player.init(enableNativeLogs: true).then((initialized) async {
       _player.durationStream.distinct().listen((duration) {
+        print("flutter: Received duration: $duration");
         setState(() {
           totalDuration = duration?.inSeconds.toDouble() ?? 0.0;
         });
@@ -94,6 +95,30 @@ class _PlayerPageState extends State<PlayerPage> {
             log("Active index changed: $index");
             currentTrackIndex = index;
           }
+        });
+      });
+
+      _player.playbackStream.distinct().listen((state) {
+
+        bool newPlayState;
+        switch (state) {
+
+          case PlaybackState.idle:
+            newPlayState = false;
+          case PlaybackState.playing:
+            newPlayState = true;
+          case PlaybackState.paused:
+            newPlayState = false;
+          case PlaybackState.loading:
+            newPlayState = false;
+          case PlaybackState.seeking:
+            newPlayState = false;
+          case PlaybackState.error:
+            newPlayState = false;
+        }
+
+        setState(() {
+          isPlaying = newPlayState;
         });
       });
 

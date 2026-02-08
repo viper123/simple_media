@@ -297,6 +297,7 @@ open class DemoMediaLibrarySessionCallback(val service: DemoPlaybackService) :
         )
     }
 
+
     companion object {
         private const val CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON =
             "net.hevsoft.androidmedia.SHUFFLE_ON"

@@ -71,5 +71,6 @@ class _StreamEmitsElementsFromList<T> {
 }
 
 Duration a1s() => const Duration(seconds: 1);
+Duration a2s() => const Duration(seconds: 2);
 Duration a3s() => const Duration(seconds: 3);
 Duration a5s() => const Duration(seconds: 5);

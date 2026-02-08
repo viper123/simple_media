@@ -12,6 +12,8 @@ object MediaItemTree {
   private var treeNodes: MutableMap<String, MediaItemNode> = mutableMapOf()
   private var titleMap: MutableMap<String, MediaItemNode> = mutableMapOf()
 
+  private var idMap: MutableMap<String, Int> = mutableMapOf()
+
   /**
    * Map of each playlist item and its id, prepared for easy access.
    */
@@ -86,6 +88,7 @@ object MediaItemTree {
   fun setAudioItems(audioItems: List<AudioItem>) {
     treeNodes.clear()
     titleMap.clear()
+    idMap.clear()
 
     // create root node.
     treeNodes[ROOT_ID] =
@@ -100,16 +103,19 @@ object MediaItemTree {
       )
 
 
+      var index = 0;
     audioItems.forEach { audioItem ->
       val id = audioItem.id
       val album = audioItem.album
       val title = audioItem.title
-      val artist = audioItem.extra?.getString("artist") ?: EMPTY_STRING
-      val genre = audioItem.extra?.getString("genre") ?: EMPTY_STRING
-      val sourceUri = audioItem.uri
-      val imageUri = audioItem.artUri
+      val artist = audioItem.extra?.get("artist") as? String ?: EMPTY_STRING
+      val genre = audioItem.extra?.get("genre") as? String ?: EMPTY_STRING
+      val sourceUri = audioItem.uri.toNullableUri()
+      val imageUri = audioItem.artUri.toNullableUri()
       // key of such items in tree
       val idInTree = ITEM_PREFIX + id
+
+        idMap[idInTree] = index++
 
       treeNodes[idInTree] =
         MediaItemNode(
@@ -133,6 +139,15 @@ object MediaItemTree {
       playlistMap[id] = audioItem
     }
   }
+
+    fun indexOf(item: MediaItem?) : Int? {
+
+        val id = item?.mediaId
+        if (id != null) {
+            return idMap[id];
+        }
+        return null
+    }
 
   fun getItem(id: String): MediaItem? {
     return treeNodes[id]?.item
@@ -223,4 +238,12 @@ object MediaItemTree {
     }
     return "$text".trim().lowercase()
   }
+}
+
+fun String.toNullableUri() : Uri? {
+    try {
+        return Uri.parse(this)
+    } catch (e : Exception) {
+        return null
+    }
 }

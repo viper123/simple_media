@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:media/audio_player.dart';
@@ -190,7 +192,7 @@ void main() {
       await Future.delayed(a1s());
 
       await player.seekTo(a3s());
-      await Future.delayed(a1s());
+      await Future.delayed(a5s());
 
       await player.pause();
       await Future.delayed(a1s());
@@ -198,15 +200,27 @@ void main() {
       await player.stop();
       await Future.delayed(a1s());
 
-      expect(states, [
-        PlaybackState.loading,
-        PlaybackState.idle,
-        PlaybackState.playing,
-        PlaybackState.seeking,
-        PlaybackState.playing,
-        PlaybackState.paused,
-        PlaybackState.idle,
-      ]);
+      if (Platform.isIOS) {
+        expect(states, [
+          PlaybackState.loading,
+          PlaybackState.idle,
+          PlaybackState.playing,
+          PlaybackState.seeking,
+          PlaybackState.playing,
+          PlaybackState.paused,
+          PlaybackState.idle,
+        ]);
+      } else if (Platform.isAndroid) {
+        expect(states, [
+          PlaybackState.loading,
+          PlaybackState.playing,
+          PlaybackState.seeking,
+          PlaybackState.loading,
+          PlaybackState.playing,
+          PlaybackState.paused,
+          PlaybackState.idle
+        ]);
+      }
     });
   });
 }

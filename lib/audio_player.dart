@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:media/error_codes.dart';
@@ -62,6 +63,14 @@ class AudioPlayer {
     _mc = MethodChannel('media-comm-$id');
 
     _mc.setMethodCallHandler(_handleMethodCall);
+
+    if (Platform.isAndroid) {
+      _mc.invokeMethod("initAndroid",{
+        "channelId": "demo_session_notification_channel_id",
+        "notificationId": 123,
+        "mainActivityClass" : "net.hevsoft.media_example.MainActivity"
+      });
+    }
 
     return initialized;
   }
