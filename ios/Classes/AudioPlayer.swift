@@ -379,20 +379,17 @@ class AudioPlayer : AudioPlayerInstance {
 
         playerRateObserver?.invalidate()
         playerRateObserver = player.observe(\.rate, options: [.new, .old]) {[weak self] player, change in
-            Task {
-                let rate = player.rate
-                let playing = rate > 0
-                await MainActor.run { [weak self] in
-                    guard let currentState = self?._playbackState else { return }
-                    if (playing) {
-                        if (currentState != .playing) {
-                            self?.updatePlaybackState(newState: .playing)
-                        }
-                    } else {
-                        if (currentState == .playing) {
-                            self?.updatePlaybackState(newState: .paused)
-                        }
-                    }
+            let rate = player.rate
+            let playing = rate > 0
+            
+            guard let currentState = self?._playbackState else { return }
+            if (playing) {
+                if (currentState != .playing) {
+                    self?.updatePlaybackState(newState: .playing)
+                }
+            } else {
+                if (currentState == .playing) {
+                    self?.updatePlaybackState(newState: .paused)
                 }
             }
         }
