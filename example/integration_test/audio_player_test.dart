@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:media/audio_player.dart';
+import 'package:simple_media/audio_player.dart';
 
 import 'test_data.dart';
 import 'test_utils.dart';

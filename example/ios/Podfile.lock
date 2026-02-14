@@ -2,15 +2,15 @@ PODS:
   - Flutter (1.0.0)
   - integration_test (0.0.1):
     - Flutter
-  - Kingfisher (8.6.0)
-  - media (0.0.1):
+  - Kingfisher (8.6.2)
+  - simple_media (0.1.1):
     - Flutter
     - Kingfisher (~> 8.6.0)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
   - integration_test (from `.symlinks/plugins/integration_test/ios`)
-  - media (from `.symlinks/plugins/media/ios`)
+  - simple_media (from `.symlinks/plugins/simple_media/ios`)
 
 SPEC REPOS:
   trunk:
@@ -21,15 +21,15 @@ EXTERNAL SOURCES:
     :path: Flutter
   integration_test:
     :path: ".symlinks/plugins/integration_test/ios"
-  media:
-    :path: ".symlinks/plugins/media/ios"
+  simple_media:
+    :path: ".symlinks/plugins/simple_media/ios"
 
 SPEC CHECKSUMS:
-  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
-  Kingfisher: 64278f126a815d0e2d391cdf71311b85882c4de0
-  media: 0a26b87416263d2a7f454080acd05d3f549d081b
+  Kingfisher: 23d18f54677d973b713e54ce6a8f5eef6e7056ba
+  simple_media: d75e3616eae8a99fbbd11e29e9d672e0ace82249
 
-PODFILE CHECKSUM: f8c2dcdfb50bb67645580d28a6bf814fca30bdec
+PODFILE CHECKSUM: ce2a4dd764e1c7aeed6a7cdc5e61d092b6dc6d32
 
 COCOAPODS: 1.16.2

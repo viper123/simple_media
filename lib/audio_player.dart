@@ -3,8 +3,8 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
-import 'package:media/error_codes.dart';
-import 'package:media/logger.dart';
+import 'package:simple_media/error_codes.dart';
+import 'package:simple_media/logger.dart';
 import 'package:uuid/uuid.dart';
 
 class AudioPlayer {

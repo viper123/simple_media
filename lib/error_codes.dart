@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:media/audio_player.dart';
-import 'package:media/constants.dart';
+import 'package:simple_media/audio_player.dart';
+import 'package:simple_media/constants.dart';
 
 final _appleNativeErrorMap = {
   1001: ErrorCode.appleAudioSessionSetupFailed,

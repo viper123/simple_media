@@ -1,7 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:media/audio_player.dart';
+import 'package:simple_media/audio_player.dart';
 
 void main() {
   runApp(const MyApp());
@@ -76,7 +76,6 @@ class _PlayerPageState extends State<PlayerPage> {
 
     _player.init(enableNativeLogs: true).then((initialized) async {
       _player.durationStream.distinct().listen((duration) {
-        print("flutter: Received duration: $duration");
         setState(() {
           totalDuration = duration?.inSeconds.toDouble() ?? 0.0;
         });

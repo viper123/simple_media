@@ -1,5 +1,5 @@
 
-import 'package:media/audio_player.dart';
+import 'package:simple_media/audio_player.dart';
 
 final List<AudioItem> test3ItemsPlaylist = [
   AudioItem(

@@ -1,5 +1,5 @@
 
-import 'package:media/error_codes.dart';
+import 'package:simple_media/error_codes.dart';
 
 abstract class Logger {
   void logM(String message);

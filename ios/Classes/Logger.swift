@@ -12,11 +12,11 @@ protocol Logger {
     func log(_ message: String)
 }
 
-class LoggerImpl  : Logger {
+class LoggerImpl: Logger {
     func log(_ message: String) {
         print(message)
     }
-    
+
     private init() {}
 }
 
@@ -35,13 +35,11 @@ class Log {
         } else {
             instance?.log(message)
         }
-        
     }
 }
 
-class DefaultiOSLogger : Logger {
+class DefaultiOSLogger: Logger {
     func log(_ message: String) {
         debugPrint(message)
     }
-    
 }

@@ -58,7 +58,7 @@ class AudioPlayerWrapper : AudioPlayerInstance {
         channel.setMethodCallHandler { (call, result) in
             switch call.method {
             case "getDuration":
-                guard let duration = self.innerPlayer.duration else {
+                guard let duration = self.innerPlayer.currentItemDuration else {
                     result(nil)
                     return
                 }

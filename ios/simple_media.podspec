@@ -3,18 +3,19 @@
 # Run `pod lib lint media.podspec` to validate before publishing.
 #
 Pod::Spec.new do |s|
-  s.name             = 'media'
-  s.version          = '0.0.1'
-  s.summary          = 'Media plugin'
+  s.name             = 'simple_media'
+  s.version          = '0.1.1'
+  s.summary          = 'iOS Simple Media plugin. Supports background playback'
   s.description      = <<-DESC
 Media plugin
                        DESC
-  s.homepage         = 'http://example.com'
+  s.homepage         = 'https://hevsoft.go.ro/'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'Elvis Rusu' => 'hevsoft@gmail.com' }
   s.source           = { :path => '.' }
-  s.platform  = :ios, '13.0'
+  s.platform  = :ios, '15.0'
   s.source_files = 'Classes/**/*'
+
   s.dependency 'Flutter'
   s.dependency 'Kingfisher','~> 8.6.0'
 
