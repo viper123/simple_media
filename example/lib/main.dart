@@ -32,7 +32,7 @@ class _PlayerPageState extends State<PlayerPage> {
   // Player state
   bool isPlaying = false;
   int currentTrackIndex = 0;
-  final AudioPlayer _player = AudioPlayer();
+  final AudioPlayer _player = AudioPlayer(enableLogger: true);
 
   // Progress state
   double currentPosition = 0.0; // in seconds
@@ -74,56 +74,61 @@ class _PlayerPageState extends State<PlayerPage> {
   void initState() {
     super.initState();
 
-    _player.init(enableNativeLogs: true).then((initialized) async {
-      _player.durationStream.distinct().listen((duration) {
-        setState(() {
-          totalDuration = duration?.inSeconds.toDouble() ?? 0.0;
+    _player
+        .init(
+          enableNativeLogs: true,
+          androidChannelId: "demo_session_notification_channel_id",
+          androidNotificationId: 123,
+          androidMainClass: "net.hevsoft.media_example.MainActivity",
+        )
+        .then((initialized) async {
+          _player.durationStream.distinct().listen((duration) {
+            setState(() {
+              totalDuration = duration?.inSeconds.toDouble() ?? 0.0;
+            });
+          });
+
+          _player.progressStream.distinct().listen((duration) {
+            setState(() {
+              log("Current progress: $duration");
+              currentPosition = duration.inSeconds.toDouble();
+            });
+          });
+
+          _player.activeIndexStream.distinct().listen((index) {
+            setState(() {
+              if (index != invalidActiveIndex) {
+                log("Active index changed: $index");
+                currentTrackIndex = index;
+              }
+            });
+          });
+
+          _player.playbackStream.distinct().listen((state) {
+            bool newPlayState;
+            switch (state) {
+              case PlaybackState.idle:
+                newPlayState = false;
+              case PlaybackState.playing:
+                newPlayState = true;
+              case PlaybackState.paused:
+                newPlayState = false;
+              case PlaybackState.loading:
+                newPlayState = false;
+              case PlaybackState.seeking:
+                newPlayState = false;
+              case PlaybackState.error:
+                newPlayState = false;
+            }
+
+            setState(() {
+              isPlaying = newPlayState;
+            });
+          });
+
+          final loaded = await _player.loadPlaylist(playlist);
+          log("Playlist loaded: $loaded");
         });
-      });
-
-      _player.progressStream.distinct().listen((duration) {
-        setState(() {
-          log("Current progress: $duration");
-          currentPosition = duration.inSeconds.toDouble();
-        });
-      });
-
-      _player.activeIndexStream.distinct().listen((index) {
-        setState(() {
-          if (index != invalidActiveIndex) {
-            log("Active index changed: $index");
-            currentTrackIndex = index;
-          }
-        });
-      });
-
-      _player.playbackStream.distinct().listen((state) {
-
-        bool newPlayState;
-        switch (state) {
-
-          case PlaybackState.idle:
-            newPlayState = false;
-          case PlaybackState.playing:
-            newPlayState = true;
-          case PlaybackState.paused:
-            newPlayState = false;
-          case PlaybackState.loading:
-            newPlayState = false;
-          case PlaybackState.seeking:
-            newPlayState = false;
-          case PlaybackState.error:
-            newPlayState = false;
-        }
-
-        setState(() {
-          isPlaying = newPlayState;
-        });
-      });
-
-      final loaded = await _player.loadPlaylist(playlist);
-      log("Playlist loaded: $loaded");
-    });
   }
 
   void playPause() {

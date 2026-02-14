@@ -30,7 +30,12 @@ void main() {
     late AudioPlayer player;
     setUp(() async {
       player = AudioPlayer();
-      await player.init();
+      await player.init(
+        enableNativeLogs: true,
+        androidChannelId: "demo_session_notification_channel_id",
+        androidNotificationId: 123,
+        androidMainClass: "net.hevsoft.media_example.MainActivity",
+      );
     });
 
     tearDown(() {
@@ -218,7 +223,7 @@ void main() {
           PlaybackState.loading,
           PlaybackState.playing,
           PlaybackState.paused,
-          PlaybackState.idle
+          PlaybackState.idle,
         ]);
       }
     });

@@ -8,8 +8,10 @@ import 'package:simple_media/logger.dart';
 import 'package:uuid/uuid.dart';
 
 class AudioPlayer {
-  AudioPlayer() {
-    Log.installLogger(_AudioPlayerLogger());
+  AudioPlayer({bool enableLogger = false}) {
+    if (enableLogger) {
+      Log.installLogger(_AudioPlayerLogger());
+    }
   }
 
   bool _initialized = false;
@@ -44,7 +46,13 @@ class AudioPlayer {
 
   Stream<Duration?> get durationStream => _durationController.stream;
 
-  Future<bool> init({bool enableNativeLogs = false}) async {
+  Future<bool> init({
+    required String androidChannelId,
+    required int androidNotificationId,
+    required String androidMainClass,
+    bool enableNativeLogs = false,
+  }) async {
+    assert(androidNotificationId != 0, "Notification Id must not be 0");
     if (_initialized) {
       return true;
     }
@@ -65,10 +73,10 @@ class AudioPlayer {
     _mc.setMethodCallHandler(_handleMethodCall);
 
     if (Platform.isAndroid) {
-      _mc.invokeMethod("initAndroid",{
-        "channelId": "demo_session_notification_channel_id",
-        "notificationId": 123,
-        "mainActivityClass" : "net.hevsoft.media_example.MainActivity"
+      _mc.invokeMethod("initAndroid", {
+        "channelId": androidChannelId,
+        "notificationId": androidNotificationId,
+        "mainActivityClass": androidMainClass,
       });
     }
 
