@@ -118,6 +118,7 @@ class AudioPlayer {
           if (safeArgument is int) {
             if (safeArgument >= 0 &&
                 safeArgument < PlaybackState.values.length) {
+              Log.m("Received playbackState update of $safeArgument");
               _playbackController.add(PlaybackState.values[safeArgument]);
             } else {
               Log.e(Error.fromCode(ErrorCode.invalidPlaybackStateIndex));

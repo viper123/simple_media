@@ -284,11 +284,13 @@ class AudioPlayerWrapper(private val id: String,
         override fun onIsLoadingChanged(isLoading: Boolean) {
             super.onIsLoadingChanged(isLoading)
 
-            if (isLoading) {
-                sendPlayerStateToFlutter(flutterStateLoading)
-            }
-            /// We don't need to concern with isLoading == false as that
-            /// state will be handled by playbackStateChanged or onIsPlayingChanged
+            ///TODO In orther to reenable the code bellow
+            ///I need to find a way to save the state before loading
+            ///and resend it when we receive loading=false
+            AudioLibLog.m(tag, "onIsLoadingChanged $isLoading")
+//            if (isLoading) {
+//                sendPlayerStateToFlutter(flutterStateLoading)
+//            }
         }
 
         override fun onPlayerError(error: PlaybackException) {
@@ -388,6 +390,7 @@ class AudioPlayerWrapper(private val id: String,
     }
 
     private fun sendPlayerStateToFlutter(state : Int) {
+        AudioLibLog.m(tag, "Actually send $state to flutter")
         channel.invokeMethod("playbackState", state, object : SimpleMethodResult() {
             override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) {
                 AudioLibLog.e(tag, "pushPlayerStateToFlutter raised $errorCode $errorMessage")
@@ -423,6 +426,7 @@ class AudioPlayerWrapper(private val id: String,
     }
 
     private fun playbackStateChanged(playbackState : Int) {
+        AudioLibLog.m(tag, "Will send playbackState of $playbackState")
         when (playbackState) {
             Player.STATE_IDLE -> sendPlayerStateToFlutter(flutterStateIdle)
             Player.STATE_BUFFERING -> sendPlayerStateToFlutter(flutterStateLoading)
@@ -480,6 +484,7 @@ class AudioPlayerWrapper(private val id: String,
                             "onDisconnected",
                             Exception(), PlaybackException.ERROR_CODE_DISCONNECTED
                         )
+                        AudioLibLog.m(tag, "onDisconnected, error will be sent to flutter")
                         sendPlayerErrorToFlutter(ex)
 
                         ///
