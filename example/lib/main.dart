@@ -70,6 +70,13 @@ class _PlayerPageState extends State<PlayerPage> {
     ),
   ];
 
+  final rvsPlaylist = [
+    AudioItem(id: "https://storage.rvs.ro/emisiuni/2026/04%20aprilie/a%20doua%20opinie/ado_202_Cine%20gandeste%20pentru%20tine_25_04_2026.mp3",
+        uri: Uri.parse("https://storage.rvs.ro/emisiuni/2026/04%20aprilie/a%20doua%20opinie/ado_202_Cine%20gandeste%20pentru%20tine_25_04_2026.mp3"),
+        artUri: Uri.parse("https://rvs.ro/uploads/shows/emisiuni-Cristina-Isvan(1)-1.png"),
+        title: "Cine gandeste pentru tine", album: "A doua opinie")
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -126,7 +133,7 @@ class _PlayerPageState extends State<PlayerPage> {
             });
           });
 
-          final loaded = await _player.loadPlaylist(playlist);
+          final loaded = await _player.loadPlaylist(rvsPlaylist);
           log("Playlist loaded: $loaded");
         });
   }

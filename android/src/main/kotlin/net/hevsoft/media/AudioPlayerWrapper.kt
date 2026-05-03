@@ -126,6 +126,7 @@ class AudioPlayerWrapper(private val id: String,
             }
             "loadPlaylist" -> {
                 try {
+                    AudioLibLog.m("loadPlaylist");
                     val playlistMaps = call.arguments as? List<Map<String, Any?>>
 
                     if (playlistMaps == null) {
