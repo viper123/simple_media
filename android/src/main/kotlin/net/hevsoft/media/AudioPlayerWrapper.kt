@@ -66,7 +66,6 @@ class AudioPlayerWrapper(private val id: String,
                 val currentPositionMs = mediaController?.currentPosition
                 val durationMs = mediaController?.duration
 
-                AudioLibLog.m(tag, "updateProgressRunnable duration:${mediaController?.duration}")
                 duration.value = durationMs ?: 0
                 currentPosition.value = currentPositionMs ?: 0
 
