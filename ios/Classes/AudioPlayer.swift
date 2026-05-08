@@ -70,11 +70,13 @@ class AudioPlayer : AudioPlayerInstance {
         // Enable next track command
         commandCenter.nextTrackCommand.addTarget { [weak self] event in
             if self?.isForwardPossible() == true {
-                let movedForward = self?.moveForward()
-                if (!(movedForward ?? false)) {
-                    Log.log(tag: tag, "Warning: Failed to move forward in playlist")
+                Task {
+                    let movedForward = await self?.moveForward() ?? false
+                    if (!movedForward) {
+                        Log.log(tag: tag, "Warning: Failed to move forward in playlist")
+                    }
                 }
-                return movedForward == true ? .success : .commandFailed
+                return .success
             }
             return .noActionableNowPlayingItem
         }
@@ -82,11 +84,13 @@ class AudioPlayer : AudioPlayerInstance {
         // Enable previous track command
         commandCenter.previousTrackCommand.addTarget { [weak self] event in
             if self?.isBackwardsPossible() == true {
-                let movedBackward = self?.moveBackward()
-                if (!(movedBackward ?? false)) {
-                    Log.log(tag: tag, "Warning: Failed to move backward in playlist")
+                Task {
+                    let movedBackward = await self?.moveBackward() ?? false
+                    if (!movedBackward) {
+                        Log.log(tag: tag, "Warning: Failed to move backward in playlist")
+                    }
                 }
-                return movedBackward == true ? .success : .commandFailed
+                return .success
             }
             return .noActionableNowPlayingItem
         }
@@ -95,11 +99,13 @@ class AudioPlayer : AudioPlayerInstance {
         commandCenter.changePlaybackPositionCommand.addTarget { [weak self] event in
             if let event = event as? MPChangePlaybackPositionCommandEvent {
                 let time = CMTime(seconds: event.positionTime, preferredTimescale: 600)
-                let seeked = self?.seek(to: nil, at: time)
-                if (!(seeked ?? false)) {
-                    Log.log(tag: tag, "Warning: Failed to seek to new position in audio player")
+                Task {
+                    let seeked = await self?.seek(to: nil, at: time) ?? false
+                    if (!seeked) {
+                        Log.log(tag: tag, "Warning: Failed to seek to new position in audio player")
+                    }
                 }
-                return seeked == true ? .success : .commandFailed
+                return .success
             }
             return .commandFailed
         }
@@ -381,7 +387,6 @@ class AudioPlayer : AudioPlayerInstance {
         playerRateObserver = player.observe(\.rate, options: [.new, .old]) {[weak self] player, change in
             let rate = player.rate
             let playing = rate > 0
-            
             guard let currentState = self?._playbackState else { return }
             if (playing) {
                 if (currentState != .playing) {
@@ -539,7 +544,7 @@ class AudioPlayer : AudioPlayerInstance {
     }
 
     //MARK: Seek
-    func moveForward() -> Bool {
+    func moveForward() async -> Bool {
         if (playbackIndex == INVALID_INDEX) {
             return false
         }
@@ -548,7 +553,7 @@ class AudioPlayer : AudioPlayerInstance {
             return false
         }
 
-        return seek(to: playbackIndex + 1)
+        return await seek(to: playbackIndex + 1)
     }
 
     func isForwardPossible() -> Bool {
@@ -560,7 +565,7 @@ class AudioPlayer : AudioPlayerInstance {
         return newIndex >= 0 && newIndex < playlist.count
     }
 
-    func moveBackward() -> Bool {
+    func moveBackward() async -> Bool {
         if (playbackIndex == INVALID_INDEX) {
             return false
         }
@@ -569,7 +574,7 @@ class AudioPlayer : AudioPlayerInstance {
             return false
         }
 
-        return seek(to: playbackIndex - 1)
+        return await seek(to: playbackIndex - 1)
     }
 
     func isBackwardsPossible() -> Bool {
@@ -581,8 +586,7 @@ class AudioPlayer : AudioPlayerInstance {
         return newIndex >= 0 && newIndex < playlist.count
     }
 
-    func seek(to index:Int? = nil, at time:CMTime? = nil) -> Bool {
-
+    func seek(to index:Int? = nil, at time:CMTime? = nil) async -> Bool {
         if (disposed) {
             Log.log(tag: tag, "Impossible to seek , player is already disposed")
             return false;
@@ -618,9 +622,12 @@ class AudioPlayer : AudioPlayerInstance {
         if let newTime = time {
             let wasPlaying = innerPlayer.rate != 0
             updatePlaybackState(newState: .seeking)
-            innerPlayer.seek(to: newTime) { [weak self] completed in
-                self?.updatePlaybackState(newState: wasPlaying ? .playing : .paused)
-                self?.updateNowPlayingPlaybackRate()
+            await withCheckedContinuation { continuation in
+                innerPlayer.seek(to: newTime) { [weak self] completed in
+                    self?.updatePlaybackState(newState: wasPlaying ? .playing : .paused)
+                    self?.updateNowPlayingPlaybackRate()
+                    continuation.resume()
+                }
             }
         }
 

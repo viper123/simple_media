@@ -95,13 +95,25 @@ class AudioPlayerWrapper : AudioPlayerInstance {
                     result(false)
                     return
                 }
-                
+
                 let time = pos != nil ? CMTime(milliseconds: pos!) : nil
-                result(self.innerPlayer.seek(to: index, at: time))
+                Task { [weak self] in
+                    guard let self = self else { result(false); return }
+                    let success = await self.innerPlayer.seek(to: index, at: time)
+                    result(success)
+                }
             case "next" :
-                result(self.innerPlayer.moveForward())
+                Task { [weak self] in
+                    guard let self = self else { result(false); return }
+                    let moved = await self.innerPlayer.moveForward()
+                    result(moved)
+                }
             case "prev" :
-                result(self.innerPlayer.moveBackward())
+                Task { [weak self] in
+                    guard let self = self else { result(false); return }
+                    let moved = await self.innerPlayer.moveBackward()
+                    result(moved)
+                }
                 
             default: result(FlutterMethodNotImplemented)
             }
