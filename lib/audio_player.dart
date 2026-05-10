@@ -18,7 +18,7 @@ class AudioPlayer {
 
   bool get isInitialized => _initialized;
 
-  late MethodChannel _mc;
+  MethodChannel? _mc;
 
   final List<AudioItem> _audioSource = [];
 
@@ -70,10 +70,10 @@ class AudioPlayer {
 
     _mc = MethodChannel('media-comm-$id');
 
-    _mc.setMethodCallHandler(_handleMethodCall);
+    _mc?.setMethodCallHandler(_handleMethodCall);
 
     if (Platform.isAndroid) {
-      _mc.invokeMethod("initAndroid", {
+      _mc?.invokeMethod("initAndroid", {
         "channelId": androidChannelId,
         "notificationId": androidNotificationId,
         "mainActivityClass": androidMainClass,
@@ -170,7 +170,7 @@ class AudioPlayer {
   }
 
   Future<Duration?> getDuration() async {
-    final ms = await _mc.safeInvokeMethod("getDuration");
+    final ms = await _mc?.safeInvokeMethod("getDuration");
     if (ms == null) {
       return null;
     }
@@ -206,7 +206,7 @@ class AudioPlayer {
     _audioSource.clear();
     _audioSource.addAll(items);
 
-    bool? updated = await _mc.safeInvokeMethod('loadPlaylist', playlistMaps);
+    bool? updated = await _mc?.safeInvokeMethod('loadPlaylist', playlistMaps);
 
     if (!(updated ?? false)) {
       _audioSource.clear();
@@ -217,7 +217,11 @@ class AudioPlayer {
   }
 
   Future<bool> play() async {
-    final processed = await _mc.safeInvokeMethod('play');
+    if (_mc == null) {
+      Log.e(Error.fromCode(ErrorCode.methodExecutedWhileNoMethodChannel));
+      return false;
+    }
+    final processed = await _mc?.safeInvokeMethod('play');
     if (processed is bool) {
       if (!processed) {
         Log.e(
@@ -227,14 +231,20 @@ class AudioPlayer {
           ),
         );
       }
+
+      return processed;
     } else {
       Log.e(Error.fromCode(ErrorCode.incorrectPlatformReturnType));
+      return false;
     }
-    return processed;
   }
 
   Future<bool> pause() async {
-    final processed = await _mc.safeInvokeMethod('pause');
+    if (_mc == null) {
+      Log.e(Error.fromCode(ErrorCode.methodExecutedWhileNoMethodChannel));
+      return false;
+    }
+    final processed = await _mc?.safeInvokeMethod('pause');
     if (processed is bool) {
       if (!processed) {
         Log.e(
@@ -244,14 +254,20 @@ class AudioPlayer {
           ),
         );
       }
+
+      return processed;
     } else {
       Log.e(Error.fromCode(ErrorCode.incorrectPlatformReturnType));
+      return false;
     }
-    return processed;
   }
 
   Future<void> stop() async {
-    final processed = await _mc.safeInvokeMethod('stop');
+    if (_mc == null) {
+      Log.e(Error.fromCode(ErrorCode.methodExecutedWhileNoMethodChannel));
+      return;
+    }
+    final processed = await _mc?.safeInvokeMethod('stop');
     if (processed is bool) {
       if (!processed) {
         Log.e(
@@ -267,7 +283,11 @@ class AudioPlayer {
   }
 
   Future<bool> seekTo(Duration position, {int? index}) async {
-    final processed = await _mc.safeInvokeMethod('seekTo', {
+    if (_mc == null) {
+      Log.e(Error.fromCode(ErrorCode.methodExecutedWhileNoMethodChannel));
+      return false;
+    }
+    final processed = await _mc?.safeInvokeMethod('seekTo', {
       'position': position.inMilliseconds,
       'index': index,
     });
@@ -283,28 +303,36 @@ class AudioPlayer {
       return processed;
     } else {
       Log.e(Error.fromCode(ErrorCode.incorrectPlatformReturnType));
+      return false;
     }
-
-    return false;
   }
 
   Future<bool> next() async {
-    return await _mc.safeInvokeMethod('next');
+    if (_mc == null) {
+      Log.e(Error.fromCode(ErrorCode.methodExecutedWhileNoMethodChannel));
+      return false;
+    }
+    return await _mc?.safeInvokeMethod('next');
   }
 
   Future<bool> previous() async {
-    return await _mc.safeInvokeMethod('prev');
+    if (_mc == null) {
+      Log.e(Error.fromCode(ErrorCode.methodExecutedWhileNoMethodChannel));
+      return false;
+    }
+    return await _mc?.safeInvokeMethod('prev');
   }
 
   void dispose() {
     if (isInitialized) {
       try {
-        _mc.invokeMethod('dispose');
+        _mc?.invokeMethod('dispose');
       } catch (e) {
         Log.e(Error.fromCode(ErrorCode.playbackMethodNotExecutedOnNative));
       }
-      _mc.setMethodCallHandler(null);
+      _mc?.setMethodCallHandler(null);
     }
+    _mc = null;
     _activeIndexController.close();
     _errorController.close();
     _playbackController.close();
