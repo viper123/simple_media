@@ -14,6 +14,11 @@
     <fields>;
 }
 
+# --- Flutter plugin entry point -------------------------------------------
+# Referenced by GeneratedPluginRegistrant via its no-arg constructor. R8 keeps
+# it transitively, but pin it explicitly since it is the plugin's entry point.
+-keep class net.hevsoft.media.MediaPlugin { *; }
+
 # --- Media3 foreground playback service -----------------------------------
 # PlaybackService is referenced by name in the host AndroidManifest and is
 # instantiated by the system via the `androidx.media3.session.MediaSessionService`
