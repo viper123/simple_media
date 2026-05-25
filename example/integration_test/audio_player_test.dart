@@ -29,9 +29,8 @@ void main() {
     /// stop, check playback state is idle
     late AudioPlayer player;
     setUp(() async {
-      player = AudioPlayer();
+      player = AudioPlayer(logLevel: LogLevel.full);
       await player.init(
-        enableNativeLogs: true,
         androidChannelId: "demo_session_notification_channel_id",
         androidNotificationId: 123,
         androidMainClass: "net.hevsoft.media_example.MainActivity",

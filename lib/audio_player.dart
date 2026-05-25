@@ -2,17 +2,33 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:simple_media/error_codes.dart';
 import 'package:simple_media/logger.dart';
 import 'package:uuid/uuid.dart';
 
+export 'package:simple_media/logger.dart' show LogLevel;
+
 class AudioPlayer {
-  AudioPlayer({bool enableLogger = false}) {
-    if (enableLogger) {
+  AudioPlayer({LogLevel logLevel = LogLevel.auto})
+    : _logLevel = _resolveLogLevel(logLevel) {
+    if (_logLevel.includesFlutter) {
       Log.installLogger(_AudioPlayerLogger());
     }
   }
+
+  /// Resolves [LogLevel.auto] against the current build mode. All other
+  /// values pass through unchanged.
+  static LogLevel _resolveLogLevel(LogLevel level) {
+    if (level != LogLevel.auto) {
+      return level;
+    }
+    return kDebugMode ? LogLevel.full : LogLevel.none;
+  }
+
+  /// Effective log level after [LogLevel.auto] has been resolved.
+  final LogLevel _logLevel;
 
   bool _initialized = false;
 
@@ -50,7 +66,6 @@ class AudioPlayer {
     required String androidChannelId,
     required int androidNotificationId,
     required String androidMainClass,
-    bool enableNativeLogs = false,
   }) async {
     assert(androidNotificationId != 0, "Notification Id must not be 0");
     if (_initialized) {
@@ -60,7 +75,7 @@ class AudioPlayer {
     final cc = const MethodChannel('media-comm-creator');
     final id = Uuid().v4();
 
-    if (enableNativeLogs) {
+    if (_logLevel.includesNative) {
       await cc.invokeMethod('enableLogs');
     }
 

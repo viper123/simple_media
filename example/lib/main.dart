@@ -32,7 +32,7 @@ class _PlayerPageState extends State<PlayerPage> {
   // Player state
   bool isPlaying = false;
   int currentTrackIndex = 0;
-  final AudioPlayer _player = AudioPlayer(enableLogger: true);
+  final AudioPlayer _player = AudioPlayer(logLevel: LogLevel.full);
 
   // Progress state
   double currentPosition = 0.0; // in seconds
@@ -83,7 +83,6 @@ class _PlayerPageState extends State<PlayerPage> {
 
     _player
         .init(
-          enableNativeLogs: true,
           androidChannelId: "demo_session_notification_channel_id",
           androidNotificationId: 123,
           androidMainClass: "net.hevsoft.media_example.MainActivity",

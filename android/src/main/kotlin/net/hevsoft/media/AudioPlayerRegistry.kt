@@ -33,6 +33,8 @@ class AudioPlayerRegistry {
         }
     }
 
+    fun isEmpty(): Boolean = players.isEmpty()
+
     fun dispose() {
         players.forEach { (_, player) ->
             player.dispose()

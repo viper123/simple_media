@@ -39,6 +39,7 @@ import androidx.media3.common.util.UnstableApi
 import android.media.AudioManager
 import android.os.Handler
 import android.os.Looper
+import androidx.core.app.NotificationManagerCompat
 import androidx.media3.session.SessionError
 
 class AudioPlayerWrapper(private val id: String,
@@ -529,11 +530,44 @@ class AudioPlayerWrapper(private val id: String,
         noisyReceiver.noisyListener = null
         unregisterNoisyReceiver()
 
+        mediaController?.stop()
+        mediaController?.seekTo(0, 0)
+        // Drop the shared player's queue so Media3 has nothing to render in the
+        // notification once we release this controller. Wrappers share a single
+        // ExoPlayer, so this is destructive to any concurrent wrapper — accepted
+        // as a rare-case trade-off (see CLAUDE.md / dispose contract).
+        mediaController?.clearMediaItems()
+
         mediaController?.removeListener(playerListener)
         mediaController?.release()
         mediaController = null
 
         mainScope.dispose()
+
+        // Force-dismiss the playback notification even if other wrappers are
+        // still registered. If a sibling wrapper is actively playing, Media3
+        // will re-post the notification on its next player-state change.
+        PluginInstallConfiguration.getAudioConfig()?.let { cfg ->
+            try {
+                NotificationManagerCompat.from(context).cancel(cfg.notificationId)
+            } catch (e: Exception) {
+                AudioLibLog.e(tag, "Error cancelling playback notification during dispose", e)
+            }
+        }
+
+        // PlaybackService is a singleton MediaSessionService shared by every
+        // AudioPlayerWrapper. Only tear it down once the last player is gone,
+        // otherwise we would kill the session for other live wrappers.
+        if (registry.isEmpty()) {
+            try {
+                context.stopService(Intent(context, PlaybackService::class.java))
+                AudioLibLog.m(tag, "Service was  stopped")
+            } catch (e: Exception) {
+                AudioLibLog.e(tag, "Error stopping PlaybackService during dispose", e)
+            }
+        } else {
+            AudioLibLog.m(tag, "Service was not stopped because there are other players registered")
+        }
     }
 }
 
