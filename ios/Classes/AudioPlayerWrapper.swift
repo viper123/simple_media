@@ -73,7 +73,6 @@ class AudioPlayerWrapper : AudioPlayerInstance {
                 result(success)
             case "dispose":
                 self.dispose()
-                self.innerPlayer.dispose()
                 result(true)
             case "play":
                 self.innerPlayer.play()

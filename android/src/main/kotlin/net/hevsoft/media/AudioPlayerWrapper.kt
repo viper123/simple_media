@@ -1,66 +1,69 @@
 package net.hevsoft.media
 
+import android.content.BroadcastReceiver
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.media.AudioManager
+import android.os.Handler
+import android.os.Looper
+import androidx.annotation.OptIn
+import androidx.core.app.NotificationManagerCompat
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionError
+import androidx.media3.session.SessionToken
 import io.flutter.plugin.common.BinaryMessenger
+import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.MethodCall
-import net.hevsoft.androidmedia.library.AudioConfiguration
-import net.hevsoft.androidmedia.library.AudioLibLog
-import net.hevsoft.androidmedia.library.PluginInstallConfiguration
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import net.hevsoft.androidmedia.library.AudioItem
-import net.hevsoft.androidmedia.library.MediaItemTree
-import net.hevsoft.androidmedia.library.PlaybackService
-import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
-import android.content.Context
-import androidx.media3.session.MediaController
-import androidx.media3.session.SessionToken
-import kotlinx.coroutines.launch
-import androidx.media3.common.Player
-import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
-import android.content.ComponentName
-import kotlinx.coroutines.guava.await
-import kotlinx.coroutines.delay
-import androidx.media3.common.PlaybackException
-import android.content.BroadcastReceiver
-import android.content.Intent
-import android.content.IntentFilter
-import androidx.annotation.OptIn
-import androidx.media3.common.util.UnstableApi
-import android.media.AudioManager
-import android.os.Handler
-import android.os.Looper
-import androidx.core.app.NotificationManagerCompat
-import androidx.media3.session.SessionError
+import net.hevsoft.androidmedia.library.AudioConfiguration
+import net.hevsoft.androidmedia.library.AudioItem
+import net.hevsoft.androidmedia.library.AudioLibLog
+import net.hevsoft.androidmedia.library.MediaItemTree
+import net.hevsoft.androidmedia.library.PlaybackService
+import net.hevsoft.androidmedia.library.PluginInstallConfiguration
+import kotlin.coroutines.CoroutineContext
 
-class AudioPlayerWrapper(private val id: String,
-                         messenger: BinaryMessenger,
-                         private val context : Context,
-                         private val registry: AudioPlayerRegistry) : MethodCallHandler {
+class AudioPlayerWrapper(
+    private val id: String,
+    messenger: BinaryMessenger,
+    private val context: Context,
+    private val registry: AudioPlayerRegistry
+) : MethodCallHandler {
 
-    val channel : MethodChannel = MethodChannel(messenger, "media-comm-$id")
+    val channel: MethodChannel = MethodChannel(messenger, "media-comm-$id")
     private val mainScope = MainDisposableScope()
-    private var mediaController : MediaController? = null;
-    private val noisyListener : () -> Unit = {
+    private var mediaController: MediaController? = null;
+    private val noisyListener: () -> Unit = {
         mediaController?.pause()
     }
-    private val noisyReceiver : BecomingNoisyReceiver = BecomingNoisyReceiver().also {
+    private val noisyReceiver: BecomingNoisyReceiver = BecomingNoisyReceiver().also {
         it.noisyListener = noisyListener
     }
-    private val noisyIntentFilter : IntentFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
+    private val noisyIntentFilter: IntentFilter =
+        IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
     private val currentPosition = MutableStateFlow(0L)
-    private val duration : MutableStateFlow<Long?> = MutableStateFlow(null)
+    private val duration: MutableStateFlow<Long?> = MutableStateFlow(null)
     private val progressHandler = Handler(Looper.getMainLooper())
-    private var currentItemIndex : Int? = null
+    private var currentItemIndex: Int? = null
     private val updateProgressRunnable = object : Runnable {
         override fun run() {
             if (mediaController?.isPlaying == true) {
@@ -74,6 +77,8 @@ class AudioPlayerWrapper(private val id: String,
             }
         }
     }
+
+    var disposed = false
 
     init {
         channel.setMethodCallHandler(this)
@@ -95,8 +100,11 @@ class AudioPlayerWrapper(private val id: String,
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
-        AudioLibLog.m(tag, "onMethodCall: $call")
+        AudioLibLog.m(tag, "onMethodCall: $call disposed: $disposed")
 
+        if (disposed) {
+            return
+        }
         mainScope.launch {
             handleMethodCall(call, result)
         }
@@ -124,9 +132,10 @@ class AudioPlayerWrapper(private val id: String,
                 PluginInstallConfiguration.installAudioConfig(configuration)
                 AudioLibLog.m(tag, "Android config fully initialized")
             }
+
             "loadPlaylist" -> {
                 try {
-                    AudioLibLog.m("loadPlaylist");
+                    AudioLibLog.m(tag, "loadPlaylist");
                     val playlistMaps = call.arguments as? List<Map<String, Any?>>
 
                     if (playlistMaps == null) {
@@ -150,33 +159,36 @@ class AudioPlayerWrapper(private val id: String,
                     }
 
 
-                } catch (e : Exception) {
+                } catch (e: Exception) {
                     AudioLibLog.e(tag, "Error loading playlist", e)
                     result.success(false)
                 }
             }
+
             "play" -> {
                 try {
                     withController { controller ->
                         controller.play()
                         result.success(true)
                     }
-                } catch (e : Exception) {
+                } catch (e: Exception) {
                     AudioLibLog.e(tag, "Error while playing", e)
                     result.success(false)
                 }
             }
+
             "pause" -> {
                 try {
                     withController { controller ->
                         controller.pause()
                         result.success(true)
                     }
-                } catch (e : Exception) {
+                } catch (e: Exception) {
                     AudioLibLog.e(tag, "Error while pausing", e)
                     result.success(false)
                 }
             }
+
             "stop" -> {
                 try {
                     withController { controller ->
@@ -184,59 +196,64 @@ class AudioPlayerWrapper(private val id: String,
                         controller.seekTo(0, 0)
                         result.success(true)
                     }
-                } catch (e : Exception) {
+                } catch (e: Exception) {
                     AudioLibLog.e(tag, "Error while stopping", e)
                     result.success(false)
                 }
             }
+
             "seekTo" -> {
                 try {
                     val index = call.argument<Int?>("index")
                     val position = call.argument<Int?>("position")
 
-                    AudioLibLog.m("arguments $index $position")
+                    AudioLibLog.m(tag, "arguments $index $position")
                     val res = seekTo(index, position)
                     result.success(res)
-                } catch (e : Exception) {
+                } catch (e: Exception) {
                     AudioLibLog.e(tag, "Error while executing seekTo", e)
                     result.success(false)
                 }
             }
+
             "next" -> {
                 try {
                     withController { controller ->
                         controller.seekToNextMediaItem()
                         result.success(true)
                     }
-                } catch (e : Exception) {
+                } catch (e: Exception) {
                     AudioLibLog.e(tag, "Error while executing next", e)
                     result.success(false)
                 }
             }
+
             "prev" -> {
                 try {
                     withController { controller ->
                         controller.seekToPreviousMediaItem()
                         result.success(true)
                     }
-                } catch (e : Exception) {
+                } catch (e: Exception) {
                     AudioLibLog.e(tag, "Error while executing prev", e)
                     result.success(false)
                 }
             }
+
             "getDuration" -> {
                 try {
                     withController { controller ->
                         val durationMs = controller.duration
                         result.success(durationMs)
                     }
-                } catch (e : Exception) {
+                } catch (e: Exception) {
                     AudioLibLog.e(tag, "Error while executing getDuration", e)
                     result.success(false)
                 }
             }
+
             "dispose" -> {
-                dispose()
+                dispose(false)
             }
         }
     }
@@ -245,7 +262,7 @@ class AudioPlayerWrapper(private val id: String,
 
     private fun registerNoisyReceiver() {
         if (noisyReceiverRegistered) {
-            AudioLibLog.m("registerNoisyReceiver: receiver already registered!")
+            AudioLibLog.m(tag, "registerNoisyReceiver: receiver already registered!")
             return
         }
         context.registerReceiver(noisyReceiver, noisyIntentFilter)
@@ -253,8 +270,11 @@ class AudioPlayerWrapper(private val id: String,
     }
 
     private fun unregisterNoisyReceiver() {
-        if (noisyReceiverRegistered == false) {
-            AudioLibLog.m("unregisterNoisyReceiver: receiver already unregistered or not registered at all")
+        if (!noisyReceiverRegistered) {
+            AudioLibLog.m(
+                tag,
+                "unregisterNoisyReceiver: receiver already unregistered or not registered at all"
+            )
             return
         }
         context.unregisterReceiver(noisyReceiver)
@@ -267,12 +287,14 @@ class AudioPlayerWrapper(private val id: String,
             super.onEvents(player, events)
 
             if (events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED) ||
-                events.contains(Player.EVENT_IS_PLAYING_CHANGED)) {
+                events.contains(Player.EVENT_IS_PLAYING_CHANGED)
+            ) {
 
                 if (player.isPlaying) {
                     registerNoisyReceiver()
                 } else if (player.playbackState == Player.STATE_IDLE ||
-                    player.playbackState == Player.STATE_ENDED) {
+                    player.playbackState == Player.STATE_ENDED
+                ) {
                     unregisterNoisyReceiver()
                 }
 
@@ -285,7 +307,7 @@ class AudioPlayerWrapper(private val id: String,
         override fun onIsLoadingChanged(isLoading: Boolean) {
             super.onIsLoadingChanged(isLoading)
 
-            ///TODO In orther to reenable the code bellow
+            ///TODO In order to reenable the code bellow
             ///I need to find a way to save the state before loading
             ///and resend it when we receive loading=false
             AudioLibLog.m(tag, "onIsLoadingChanged $isLoading")
@@ -337,7 +359,7 @@ class AudioPlayerWrapper(private val id: String,
         }
     }
 
-    suspend fun seekTo(index : Int?, position : Int?) : Boolean {
+    suspend fun seekTo(index: Int?, position: Int?): Boolean {
         if (index == null && position == null) {
             return false
         }
@@ -352,15 +374,17 @@ class AudioPlayerWrapper(private val id: String,
                 sendPlayerStateToFlutter(flutterStateSeeking)
                 controller.seekTo(position.toLong())
             } else {
-                throw IllegalStateException("This should not happen as this case should already be " +
-                        "handled at the beginning of the seekTo method.")
+                throw IllegalStateException(
+                    "This should not happen as this case should already be " +
+                            "handled at the beginning of the seekTo method."
+                )
             }
 
             return@withControllerReturns true
         }
     }
 
-    private suspend fun fadeOutAndPause(controller : MediaController, durationMs: Long = 1000) {
+    private suspend fun fadeOutAndPause(controller: MediaController, durationMs: Long = 1000) {
         val steps = 20
         val stepDelay = durationMs / steps
         val volumeDecrement = 1f / steps
@@ -374,7 +398,7 @@ class AudioPlayerWrapper(private val id: String,
         controller.volume = 1f // Reset for next play
     }
 
-    private fun sendProgressToFlutter(progress : Long) {
+    private fun sendProgressToFlutter(progress: Long) {
         channel.invokeMethod("progress", progress.toDouble(), object : SimpleMethodResult() {
             override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) {
                 AudioLibLog.e(tag, "pushProgressToFlutter raised $errorCode $errorMessage")
@@ -382,7 +406,7 @@ class AudioPlayerWrapper(private val id: String,
         })
     }
 
-    private fun sendDurationToFlutter(duration : Long) {
+    private fun sendDurationToFlutter(duration: Long) {
         channel.invokeMethod("duration", duration.toDouble(), object : SimpleMethodResult() {
             override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) {
                 AudioLibLog.e(tag, "pushProgressToFlutter raised $errorCode $errorMessage")
@@ -390,7 +414,7 @@ class AudioPlayerWrapper(private val id: String,
         })
     }
 
-    private fun sendPlayerStateToFlutter(state : Int) {
+    private fun sendPlayerStateToFlutter(state: Int) {
         AudioLibLog.m(tag, "Actually send $state to flutter")
         channel.invokeMethod("playbackState", state, object : SimpleMethodResult() {
             override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) {
@@ -399,7 +423,7 @@ class AudioPlayerWrapper(private val id: String,
         })
     }
 
-    private fun sendPlayerErrorToFlutter(e : PlaybackException) {
+    private fun sendPlayerErrorToFlutter(e: PlaybackException) {
         AudioLibLog.e(tag, "onPlayerError", e)
 
         channel.invokeMethod("error", e.errorCode, object : SimpleMethodResult() {
@@ -409,24 +433,28 @@ class AudioPlayerWrapper(private val id: String,
             }
         })
     }
-    private fun sendCurrentItemIndexToFlutter(newIndex : Int?) {
-        AudioLibLog.m("currentItemIndexChanged: $newIndex")
+
+    private fun sendCurrentItemIndexToFlutter(newIndex: Int?) {
+        AudioLibLog.m(tag, "currentItemIndexChanged: $newIndex")
         if (newIndex != null && newIndex != currentItemIndex) {
-            channel.invokeMethod("activeIndex", newIndex,object : SimpleMethodResult() {
+            channel.invokeMethod("activeIndex", newIndex, object : SimpleMethodResult() {
                 override fun success(result: Any?) {
-                    AudioLibLog.m("currentItemIndexChanged flutter: $result")
+                    AudioLibLog.m(tag, "currentItemIndexChanged flutter: $result")
                     currentItemIndex = newIndex
                 }
 
                 override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) {
-                    AudioLibLog.m("currentItemIndexChanged flutter error: $errorCode $errorMessage  $errorDetails")
+                    AudioLibLog.m(
+                        tag,
+                        "currentItemIndexChanged flutter error: $errorCode $errorMessage  $errorDetails"
+                    )
                 }
             })
 
         }
     }
 
-    private fun playbackStateChanged(playbackState : Int) {
+    private fun playbackStateChanged(playbackState: Int) {
         AudioLibLog.m(tag, "Will send playbackState of $playbackState")
         when (playbackState) {
             Player.STATE_IDLE -> sendPlayerStateToFlutter(flutterStateIdle)
@@ -465,47 +493,53 @@ class AudioPlayerWrapper(private val id: String,
                 result.add(audioItem)
             }
 
-        } catch (e : Exception) {
+        } catch (e: Exception) {
             AudioLibLog.e(tag, "Error parsing playlist", e)
         }
 
         return result
     }
 
-    private suspend fun createAndCacheMediaController(context: Context) : MediaController {
-            val sessionToken =
-                SessionToken(context, ComponentName(context, PlaybackService::class.java))
-            val controllerFuture = MediaController.Builder(context, sessionToken)
-                .setListener(object : MediaController.Listener {
+    suspend fun whoAmI(method: String) {
+        val ctx = currentCoroutineContext()
+        AudioLibLog.m(tag, "executing $method name=${ctx[CoroutineName]?.name} job=${ctx[Job]}")
+    }
 
-                    @OptIn(UnstableApi::class)
-                    override fun onDisconnected(controller: MediaController) {
-                        super.onDisconnected(controller)
-                        val ex = PlaybackException(
-                            "onDisconnected",
-                            Exception(), PlaybackException.ERROR_CODE_DISCONNECTED
-                        )
-                        AudioLibLog.m(tag, "onDisconnected, error will be sent to flutter")
-                        sendPlayerErrorToFlutter(ex)
+    private suspend fun createAndCacheMediaController(context: Context): MediaController {
+        whoAmI("createAndCacheMediaController")
+        val sessionToken =
+            SessionToken(context, ComponentName(context, PlaybackService::class.java))
+        val controllerFuture = MediaController.Builder(context, sessionToken)
+            .setListener(object : MediaController.Listener {
 
-                        ///
-                        /// This instance of AudioPlayerWrapper is unusable
-                        ///
-                        dispose()
-                    }
+                @OptIn(UnstableApi::class)
+                override fun onDisconnected(controller: MediaController) {
+                    super.onDisconnected(controller)
+                    val ex = PlaybackException(
+                        "onDisconnected",
+                        Exception(), PlaybackException.ERROR_CODE_DISCONNECTED
+                    )
+                    AudioLibLog.m(tag, "onDisconnected, error will be sent to flutter")
+                    sendPlayerErrorToFlutter(ex)
 
-                    @OptIn(UnstableApi::class)
-                    override fun onError(controller: MediaController, sessionError: SessionError) {
-                        super.onError(controller, sessionError)
-                        val ex = PlaybackException(
-                            sessionError.message + "code: ${sessionError.code}",
-                            Exception(), PlaybackException.ERROR_CODE_UNSPECIFIED
-                        )
+                    ///
+                    /// This instance of AudioPlayerWrapper is unusable
+                    ///
+                    dispose(fromControllerCallback = true)
+                }
 
-                        sendPlayerErrorToFlutter(ex)
-                    }
-                })
-                .buildAsync()
+                @OptIn(UnstableApi::class)
+                override fun onError(controller: MediaController, sessionError: SessionError) {
+                    super.onError(controller, sessionError)
+                    val ex = PlaybackException(
+                        sessionError.message + "code: ${sessionError.code}",
+                        Exception(), PlaybackException.ERROR_CODE_UNSPECIFIED
+                    )
+
+                    sendPlayerErrorToFlutter(ex)
+                }
+            })
+            .buildAsync()
 
         val newController = controllerFuture.await();
 
@@ -519,30 +553,53 @@ class AudioPlayerWrapper(private val id: String,
         block(controller)
     }
 
-    suspend fun <T> withControllerReturns(block: suspend (MediaController) -> T) : T {
+    suspend fun <T> withControllerReturns(block: suspend (MediaController) -> T): T {
         val controller = mediaController ?: createAndCacheMediaController(context)
         return block(controller)
     }
 
-    fun dispose() {
+    fun dispose(fromControllerCallback: Boolean) {
+        AudioLibLog.m(
+            tag,
+            "dispose fromControllerCallback:$fromControllerCallback while disposed:$disposed from: ${Thread.currentThread()}"
+        )
+
+        if (disposed) {
+            AudioLibLog.m(tag, "skip executing dispose as it is already disposed")
+            return
+        }
+
         registry.unregisterAudioPlayer(id)
+
+        //Clear channel communication
+        channel.setMethodCallHandler(null)
+
+        //Clear progress handler
+        progressHandler.removeCallbacks(updateProgressRunnable)
+
+        if (!fromControllerCallback) {
+            mediaController?.pause()
+        }
 
         noisyReceiver.noisyListener = null
         unregisterNoisyReceiver()
 
-        mediaController?.stop()
-        mediaController?.seekTo(0, 0)
-        // Drop the shared player's queue so Media3 has nothing to render in the
-        // notification once we release this controller. Wrappers share a single
-        // ExoPlayer, so this is destructive to any concurrent wrapper — accepted
-        // as a rare-case trade-off (see CLAUDE.md / dispose contract).
-        mediaController?.clearMediaItems()
-
+        if (!fromControllerCallback) {
+            mediaController?.seekTo(0, 0)
+            mediaController?.stop()
+            // Drop the shared player's queue so Media3 has nothing to render in the
+            // notification once we release this controller. Wrappers share a single
+            // ExoPlayer, so this is destructive to any concurrent wrapper — accepted
+            // as a rare-case trade-off (see CLAUDE.md / dispose contract).
+            mediaController?.clearMediaItems()
+        }
         mediaController?.removeListener(playerListener)
+        ///Mark as disposed, so no other dispose method will
+        // execute.
+        //mediaController?.release() will execute another dispose instance
+        disposed = true
         mediaController?.release()
         mediaController = null
-
-        mainScope.dispose()
 
         // Force-dismiss the playback notification even if other wrappers are
         // still registered. If a sibling wrapper is actively playing, Media3
@@ -561,13 +618,19 @@ class AudioPlayerWrapper(private val id: String,
         if (registry.isEmpty()) {
             try {
                 context.stopService(Intent(context, PlaybackService::class.java))
-                AudioLibLog.m(tag, "Service was  stopped")
+                AudioLibLog.m(tag, "Service was stopped")
             } catch (e: Exception) {
                 AudioLibLog.e(tag, "Error stopping PlaybackService during dispose", e)
             }
         } else {
             AudioLibLog.m(tag, "Service was not stopped because there are other players registered")
         }
+
+        mainScope.dispose()
+    }
+
+    override fun toString(): String {
+        return "AudioPlayerWrapper(id: $id, disposed: $disposed)"
     }
 }
 
@@ -596,7 +659,7 @@ private abstract class SimpleMethodResult : MethodChannel.Result {
 }
 
 private class BecomingNoisyReceiver : BroadcastReceiver() {
-    var noisyListener : (() -> Unit)? = null
+    var noisyListener: (() -> Unit)? = null
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {

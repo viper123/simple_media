@@ -796,7 +796,7 @@ class AudioPlayer : AudioPlayerInstance {
         commandCenter.changePlaybackPositionCommand.removeTarget(nil)
 
         stopProgressUpdates()
-        disposed = true
+
         innerPlayer.removeAllItems()
         innerPlayer.pause()
 
@@ -806,6 +806,7 @@ class AudioPlayer : AudioPlayerInstance {
         } catch {
             Log.log(tag: tag, "Failed to deactivate audio session: \(error)")
         }
+        disposed = true
     }
 }
 

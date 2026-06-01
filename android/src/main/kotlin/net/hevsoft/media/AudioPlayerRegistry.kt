@@ -9,6 +9,7 @@ class AudioPlayerRegistry {
     private val players = ConcurrentHashMap<String, AudioPlayerWrapper>()
 
     fun registerAudioPlayer(id: String, player: AudioPlayerWrapper) {
+        AudioLibLog.m(tag, "registerAudioPlayer $id")
         if (players.contains(id)) {
             AudioLibLog.m(tag, "Audio player with id $id already registered")
             return
@@ -17,7 +18,8 @@ class AudioPlayerRegistry {
     }
 
     fun unregisterAudioPlayer(id: String) {
-        if (players.contains(id)) {
+        AudioLibLog.m(tag, "unregisterAudioPlayer $id")
+        if (players.containsKey(id)) {
             players.remove(id)
         } else {
             AudioLibLog.m(tag, "Audio player with id $id not found")
@@ -25,6 +27,7 @@ class AudioPlayerRegistry {
     }
 
     fun getAudioPlayer(id: String): AudioPlayerWrapper? {
+        AudioLibLog.m(tag, "getAudioPlayer $id")
         if (players.contains(id)) {
             return players[id]
         } else {
@@ -36,11 +39,18 @@ class AudioPlayerRegistry {
     fun isEmpty(): Boolean = players.isEmpty()
 
     fun dispose() {
+        AudioLibLog.m(tag, "dispose")
+        printRegistryContent()
         players.forEach { (_, player) ->
-            player.dispose()
+            player.dispose(fromControllerCallback = false)
         }
         players.clear()
-
     }
 
+    private fun printRegistryContent() {
+        var tmp = "["
+        players.forEach { (t, u) -> tmp += "{$t: ${u}} " }
+        tmp += "]"
+        AudioLibLog.m(tag, "printRegistryContent: $tmp")
+    }
 }
