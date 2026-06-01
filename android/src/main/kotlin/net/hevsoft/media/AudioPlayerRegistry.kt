@@ -42,7 +42,7 @@ class AudioPlayerRegistry {
         AudioLibLog.m(tag, "dispose")
         printRegistryContent()
         players.forEach { (_, player) ->
-            player.dispose(fromControllerCallback = false)
+            player.dispose()
         }
         players.clear()
     }

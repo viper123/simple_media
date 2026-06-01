@@ -12,10 +12,11 @@ export 'package:simple_media/logger.dart' show LogLevel;
 
 class AudioPlayer {
   AudioPlayer({LogLevel logLevel = LogLevel.auto})
-    : _logLevel = _resolveLogLevel(logLevel) {
+      : _logLevel = _resolveLogLevel(logLevel) {
     if (_logLevel.includesFlutter) {
       Log.installLogger(_AudioPlayerLogger());
     }
+    Log.m("[AudioPlayer.Lifecycle] create instance");
   }
 
   /// Resolves [LogLevel.auto] against the current build mode. All other
@@ -31,6 +32,7 @@ class AudioPlayer {
   final LogLevel _logLevel;
 
   bool _initialized = false;
+  bool _disposed = false;
 
   bool get isInitialized => _initialized;
 
@@ -61,6 +63,8 @@ class AudioPlayer {
   final _durationController = StreamController<Duration?>.broadcast();
 
   Stream<Duration?> get durationStream => _durationController.stream;
+  
+  String? _id;
 
   Future<bool> init({
     required String androidChannelId,
@@ -74,6 +78,7 @@ class AudioPlayer {
 
     final cc = const MethodChannel('media-comm-creator');
     final id = Uuid().v4();
+    _id = id;
 
     if (_logLevel.includesNative) {
       await cc.invokeMethod('enableLogs');
@@ -82,6 +87,8 @@ class AudioPlayer {
     final initialized = await cc.invokeMethod("init", id);
 
     _initialized = initialized;
+
+    Log.m("[AudioPlayer.Lifecycle] init $id");
 
     _mc = MethodChannel('media-comm-$id');
 
@@ -180,6 +187,10 @@ class AudioPlayer {
             );
           }
           break;
+        }
+      case "nativeDispose":
+        {
+          dispose();
         }
     }
   }
@@ -339,14 +350,29 @@ class AudioPlayer {
   }
 
   void dispose() {
-    if (isInitialized) {
-      try {
-        _mc?.invokeMethod('dispose');
-      } catch (e) {
-        Log.e(Error.fromCode(ErrorCode.playbackMethodNotExecutedOnNative));
-      }
-      _mc?.setMethodCallHandler(null);
+    Log.m("[AudioPlayer.Lifecycle] dispose id:$_id initialized: $_initialized disposed: $_disposed");
+    if (!isInitialized) {
+      Log.m(
+          "Invoked dispose on a player that was not initialized, skip execution");
+      return;
     }
+
+    if (_disposed) {
+      Log.m("AudioPlayer already disposed");
+      return;
+    }
+    
+    ///Mark as disposed so when native disposed is executed
+    ///and will call back the dispose method, that thread
+    ///does not create a recursive call stack issue.
+    _disposed = true;
+    try {
+      _mc?.invokeMethod('dispose');
+    } catch (e) {
+      Log.e(Error.fromCode(ErrorCode.playbackMethodNotExecutedOnNative));
+    }
+    _mc?.setMethodCallHandler(null);
+
     _mc = null;
     _activeIndexController.close();
     _errorController.close();
@@ -403,7 +429,7 @@ class _AudioPlayerLogger implements Logger {
     if (errorContext != null) {
       log(
         "[MediaPlugin][E] Error context: $errorContext, "
-        "Error: ${error.errorMeaning}",
+            "Error: ${error.errorMeaning}",
       );
     } else {
       log("[MediaPlugin][E] Error: ${error.errorMeaning}");

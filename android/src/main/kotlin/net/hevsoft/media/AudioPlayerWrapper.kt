@@ -34,6 +34,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import net.hevsoft.androidmedia.library.AudioConfiguration
 import net.hevsoft.androidmedia.library.AudioItem
 import net.hevsoft.androidmedia.library.AudioLibLog
@@ -52,6 +54,11 @@ class AudioPlayerWrapper(
     val channel: MethodChannel = MethodChannel(messenger, "media-comm-$id")
     private val mainScope = MainDisposableScope()
     private var mediaController: MediaController? = null;
+
+    // Serializes lazy controller creation. Without this, two concurrent channel
+    // calls can both observe a null mediaController across the buildAsync().await()
+    // suspension point and each build a controller, orphaning one (a leak).
+    private val controllerMutex = Mutex()
     private val noisyListener: () -> Unit = {
         mediaController?.pause()
     }
@@ -78,9 +85,10 @@ class AudioPlayerWrapper(
         }
     }
 
-    var disposed = false
+    private var disposed = false
 
     init {
+        AudioLibLog.m("[AudioPlayer.Lifecycle] create instance $id")
         channel.setMethodCallHandler(this)
 
         mainScope.launch {
@@ -103,6 +111,7 @@ class AudioPlayerWrapper(
         AudioLibLog.m(tag, "onMethodCall: $call disposed: $disposed")
 
         if (disposed) {
+            result.error("0", "onMethodCall while dispose", null)
             return
         }
         mainScope.launch {
@@ -130,7 +139,7 @@ class AudioPlayerWrapper(
 
                 val configuration = AudioConfiguration(notificationId, channelId, mainActivityClass)
                 PluginInstallConfiguration.installAudioConfig(configuration)
-                AudioLibLog.m(tag, "Android config fully initialized")
+                AudioLibLog.m(tag, "[AudioPlayer.Lifecycle] Android config fully initialized $id")
             }
 
             "loadPlaylist" -> {
@@ -253,7 +262,7 @@ class AudioPlayerWrapper(
             }
 
             "dispose" -> {
-                dispose(false)
+                dispose()
             }
         }
     }
@@ -364,24 +373,29 @@ class AudioPlayerWrapper(
             return false
         }
 
-        return withControllerReturns { controller ->
-            if (index != null && position != null) {
-                sendPlayerStateToFlutter(flutterStateSeeking)
-                controller.seekTo(index, position.toLong())
-            } else if (index != null) {
-                controller.seekTo(index, 0)
-            } else if (position != null) {
-                sendPlayerStateToFlutter(flutterStateSeeking)
-                controller.seekTo(position.toLong())
-            } else {
-                throw IllegalStateException(
-                    "This should not happen as this case should already be " +
-                            "handled at the beginning of the seekTo method."
-                )
-            }
+        try {
+            return withControllerReturns { controller ->
+                if (index != null && position != null) {
+                    sendPlayerStateToFlutter(flutterStateSeeking)
+                    controller.seekTo(index, position.toLong())
+                } else if (index != null) {
+                    controller.seekTo(index, 0)
+                } else if (position != null) {
+                    sendPlayerStateToFlutter(flutterStateSeeking)
+                    controller.seekTo(position.toLong())
+                } else {
+                    throw IllegalStateException(
+                        "This should not happen as this case should already be " +
+                                "handled at the beginning of the seekTo method."
+                    )
+                }
 
-            return@withControllerReturns true
+                return@withControllerReturns true
+            }
+        } catch (t: Throwable) {
+            AudioLibLog.e(tag, "seekTo raised $t");
         }
+        return false
     }
 
     private suspend fun fadeOutAndPause(controller: MediaController, durationMs: Long = 1000) {
@@ -505,6 +519,7 @@ class AudioPlayerWrapper(
         AudioLibLog.m(tag, "executing $method name=${ctx[CoroutineName]?.name} job=${ctx[Job]}")
     }
 
+    @Throws
     private suspend fun createAndCacheMediaController(context: Context): MediaController {
         whoAmI("createAndCacheMediaController")
         val sessionToken =
@@ -515,17 +530,20 @@ class AudioPlayerWrapper(
                 @OptIn(UnstableApi::class)
                 override fun onDisconnected(controller: MediaController) {
                     super.onDisconnected(controller)
+                    if (disposed) {
+                        AudioLibLog.m(tag, "received onDisconnected while already disposed")
+                        return;
+                    }
                     val ex = PlaybackException(
                         "onDisconnected",
                         Exception(), PlaybackException.ERROR_CODE_DISCONNECTED
                     )
                     AudioLibLog.m(tag, "onDisconnected, error will be sent to flutter")
+
                     sendPlayerErrorToFlutter(ex)
 
-                    ///
-                    /// This instance of AudioPlayerWrapper is unusable
-                    ///
-                    dispose(fromControllerCallback = true)
+                    dispose()
+
                 }
 
                 @OptIn(UnstableApi::class)
@@ -543,25 +561,50 @@ class AudioPlayerWrapper(
 
         val newController = controllerFuture.await();
 
-        mediaController = newController;
+        // dispose() is synchronous and may have run on the main thread while we
+        // were suspended on await() above. If so, this controller is already
+        // orphaned — release it immediately instead of caching it.
+        if (disposed) {
+            AudioLibLog.m(tag, "Controller built after dispose; releasing it immediately")
+            newController.release()
+            throw IllegalStateException("AudioPlayerWrapper($id) was disposed during controller creation")
+        }
+
+        mediaController = newController
 
         return newController;
     }
 
+    /**
+     * Returns the cached [MediaController], creating it on first use. The
+     * check-and-create is guarded by [controllerMutex] so concurrent callers
+     * never build more than one controller across the await() suspension point.
+     * Throws if the wrapper has been disposed, so we never connect a controller
+     * (and bind the foreground service) after teardown.
+     */
+    @Throws
+    private suspend fun obtainController(): MediaController =
+        controllerMutex.withLock {
+            check(!disposed) { "Cannot obtain a controller: AudioPlayerWrapper($id) is disposed" }
+            mediaController ?: createAndCacheMediaController(context)
+        }
+
+    @Throws
     suspend fun withController(block: suspend (MediaController) -> Unit) {
-        val controller = mediaController ?: createAndCacheMediaController(context)
+        val controller = obtainController()
         block(controller)
     }
 
+    @Throws
     suspend fun <T> withControllerReturns(block: suspend (MediaController) -> T): T {
-        val controller = mediaController ?: createAndCacheMediaController(context)
+        val controller = obtainController()
         return block(controller)
     }
 
-    fun dispose(fromControllerCallback: Boolean) {
+    fun dispose() {
         AudioLibLog.m(
             tag,
-            "dispose fromControllerCallback:$fromControllerCallback while disposed:$disposed from: ${Thread.currentThread()}"
+            "[AudioPlayer.Lifecycle] dispose while disposed:$disposed from: ${Thread.currentThread()} id: $id"
         )
 
         if (disposed) {
@@ -571,28 +614,27 @@ class AudioPlayerWrapper(
 
         registry.unregisterAudioPlayer(id)
 
+        channel.invokeMethod("nativeDispose", null)
+
         //Clear channel communication
         channel.setMethodCallHandler(null)
 
         //Clear progress handler
         progressHandler.removeCallbacks(updateProgressRunnable)
 
-        if (!fromControllerCallback) {
-            mediaController?.pause()
-        }
+        mediaController?.pause()
 
         noisyReceiver.noisyListener = null
         unregisterNoisyReceiver()
 
-        if (!fromControllerCallback) {
-            mediaController?.seekTo(0, 0)
-            mediaController?.stop()
-            // Drop the shared player's queue so Media3 has nothing to render in the
-            // notification once we release this controller. Wrappers share a single
-            // ExoPlayer, so this is destructive to any concurrent wrapper — accepted
-            // as a rare-case trade-off (see CLAUDE.md / dispose contract).
-            mediaController?.clearMediaItems()
-        }
+        mediaController?.seekTo(0, 0)
+        mediaController?.stop()
+        // Drop the shared player's queue so Media3 has nothing to render in the
+        // notification once we release this controller. Wrappers share a single
+        // ExoPlayer, so this is destructive to any concurrent wrapper — accepted
+        // as a rare-case trade-off (see CLAUDE.md / dispose contract).
+        mediaController?.clearMediaItems()
+
         mediaController?.removeListener(playerListener)
         ///Mark as disposed, so no other dispose method will
         // execute.
