@@ -81,7 +81,8 @@ class AudioPlayerWrapper : AudioPlayerInstance {
                 self.innerPlayer.pause()
                 result(true)
             case "stop":
-                self.innerPlayer.stop()
+                let clearNotif = (call.arguments as? Dictionary<String, Any>)?["clearNotif"] as? Bool ?? false
+                self.innerPlayer.stop(clearNotif: clearNotif)
                 result(true)
             case "seekTo":
                 guard let args = call.arguments as? Dictionary<String, Any> else {

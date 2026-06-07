@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:simple_media/error_codes.dart';
@@ -288,12 +289,12 @@ class AudioPlayer {
     }
   }
 
-  Future<void> stop() async {
+  Future<void> stop({bool clearNativeNotif = false}) async {
     if (_mc == null) {
       Log.e(Error.fromCode(ErrorCode.methodExecutedWhileNoMethodChannel));
       return;
     }
-    final processed = await _mc?.safeInvokeMethod('stop');
+    final processed = await _mc?.safeInvokeMethod('stop', {'clearNotif' : clearNativeNotif});
     if (processed is bool) {
       if (!processed) {
         Log.e(
@@ -349,7 +350,7 @@ class AudioPlayer {
     return await _mc?.safeInvokeMethod('prev');
   }
 
-  void dispose() {
+  Future<void> dispose() async {
     Log.m("[AudioPlayer.Lifecycle] dispose id:$_id initialized: $_initialized disposed: $_disposed");
     if (!isInitialized) {
       Log.m(
@@ -367,18 +368,18 @@ class AudioPlayer {
     ///does not create a recursive call stack issue.
     _disposed = true;
     try {
-      _mc?.invokeMethod('dispose');
+      await _mc?.invokeMethod('dispose');
     } catch (e) {
       Log.e(Error.fromCode(ErrorCode.playbackMethodNotExecutedOnNative));
     }
     _mc?.setMethodCallHandler(null);
 
     _mc = null;
-    _activeIndexController.close();
-    _errorController.close();
-    _playbackController.close();
-    _progressController.close();
-    _durationController.close();
+    await _activeIndexController.close();
+    await _errorController.close();
+    await _playbackController.close();
+    await _progressController.close();
+    await _durationController.close();
   }
 }
 
@@ -391,10 +392,14 @@ class AudioItem {
     required this.artUri,
     required this.title,
     required this.album,
-    this.extra,
-    this.uriHeaders,
-    this.artHeaders,
-  });
+    Map<String, String>? extra,
+    Map<String, String>? uriHeaders,
+    Map<String, String>? artHeaders,
+  })  : extra = extra == null ? null : Map.unmodifiable(extra),
+        uriHeaders =
+            uriHeaders == null ? null : Map.unmodifiable(uriHeaders),
+        artHeaders =
+            artHeaders == null ? null : Map.unmodifiable(artHeaders);
 
   final String id;
   final Uri uri;
@@ -404,6 +409,47 @@ class AudioItem {
   final String album;
   final Map<String, String>? uriHeaders;
   final Map<String, String>? artHeaders;
+
+  static const _mapEquality = MapEquality<String, String>();
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is AudioItem &&
+        other.id == id &&
+        other.uri == uri &&
+        other.artUri == artUri &&
+        other.title == title &&
+        other.album == album &&
+        _mapEquality.equals(other.extra, extra) &&
+        _mapEquality.equals(other.uriHeaders, uriHeaders) &&
+        _mapEquality.equals(other.artHeaders, artHeaders);
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    uri,
+    artUri,
+    title,
+    album,
+    _mapEquality.hash(extra),
+    _mapEquality.hash(uriHeaders),
+    _mapEquality.hash(artHeaders),
+  );
+
+  @override
+  String toString() {
+    return 'AudioItem('
+        'id: $id, '
+        'uri: $uri, '
+        'extra: $extra, '
+        'artUri: $artUri, '
+        'title: $title, '
+        'album: $album, '
+        'uriHeaders: $uriHeaders, '
+        'artHeaders: $artHeaders)';
+  }
 }
 
 const invalidActiveIndex = -1;

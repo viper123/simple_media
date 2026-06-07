@@ -200,9 +200,13 @@ class AudioPlayerWrapper(
 
             "stop" -> {
                 try {
+                    val clearNotif = call.argument<Boolean>("clearNotif")
                     withController { controller ->
                         controller.stop()
                         controller.seekTo(0, 0)
+                        if (clearNotif == true) {
+                            controller.clearMediaItems()
+                        }
                         result.success(true)
                     }
                 } catch (e: Exception) {

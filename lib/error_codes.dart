@@ -145,7 +145,8 @@ enum ErrorCode {
   androidDrmDeviceRevoked,
   androidDrmLicenseExpired,
   androidVideoFrameProcessorInitFailed,
-  androidVideoFrameProcessingFailed;
+  androidVideoFrameProcessingFailed,
+  nativePlayerDisposedError;
 
   static fromIntCode(int code) {
     if (Platform.isIOS) {
@@ -325,5 +326,6 @@ extension ErrorCodesMeaning on Error {
             .androidVideoFrameProcessorInitFailed => "Caused by a failure when initializing a VideoFrameProcessor",
         ErrorCode
             .androidVideoFrameProcessingFailed => "Caused by a failure when processing a video frame",
+        ErrorCode.nativePlayerDisposedError => "Native playback failed"
       };
 }

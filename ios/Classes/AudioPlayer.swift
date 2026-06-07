@@ -534,13 +534,26 @@ class AudioPlayer : AudioPlayerInstance {
         updatePlaybackState(newState: .paused)
     }
 
-    func stop() {
+    func stop(clearNotif: Bool = false) {
         pause()
         rebuildQueueFromIndex(0)
         innerPlayer.seek(to: .zero)
         updateProgress()
         updatePlaybackState(newState: .idle)
         updateNowPlayingPlaybackRate()
+
+        // Mirrors Android's `clearNotif`: drop the queue and the lock-screen /
+        // Control Center Now Playing info so no media UI lingers after stop.
+        if clearNotif {
+            clearNowPlayingInfo()
+        }
+    }
+
+    private func clearNowPlayingInfo() {
+        innerPlayer.removeAllItems()
+        playbackIndex = INVALID_INDEX
+        currentItemDuration = nil
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
     }
 
     //MARK: Seek
