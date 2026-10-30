@@ -53,7 +53,10 @@ open class DemoPlaybackService : MediaLibraryService() {
         super.onCreate()
 
         audioConfiguration =
-            PluginInstallConfiguration.getAudioConfig() ?: throw AudioConfigNotInstalledException()
+            PluginInstallConfiguration.getAudioConfig()
+                ?: PersistentInstallConfiguration.getAudioConfig(this)
+                    ?.also { PluginInstallConfiguration.installAudioConfig(it) }
+                ?: throw AudioConfigNotInstalledException()
 
         initializeSessionAndPlayer()
         setListener(MediaSessionServiceListener())

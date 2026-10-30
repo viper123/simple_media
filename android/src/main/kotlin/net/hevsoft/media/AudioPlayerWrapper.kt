@@ -41,6 +41,7 @@ import net.hevsoft.androidmedia.library.AudioItem
 import net.hevsoft.androidmedia.library.AudioLibLog
 import net.hevsoft.androidmedia.library.MediaItemTree
 import net.hevsoft.androidmedia.library.PlaybackService
+import net.hevsoft.androidmedia.library.PersistentInstallConfiguration
 import net.hevsoft.androidmedia.library.PluginInstallConfiguration
 import kotlin.coroutines.CoroutineContext
 
@@ -139,6 +140,7 @@ class AudioPlayerWrapper(
 
                 val configuration = AudioConfiguration(notificationId, channelId, mainActivityClass)
                 PluginInstallConfiguration.installAudioConfig(configuration)
+                PersistentInstallConfiguration.persistAudioConfig(context, configuration)
                 AudioLibLog.m(tag, "[AudioPlayer.Lifecycle] Android config fully initialized $id")
             }
 
