@@ -20,13 +20,17 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.guava.future
 import kotlin.math.max
 import kotlin.math.min
 
 /** A [androidx.media3.session.MediaLibraryService.MediaLibrarySession.Callback] implementation. */
+@UnstableApi
 open class DemoMediaLibrarySessionCallback(val service: DemoPlaybackService) :
     MediaLibraryService.MediaLibrarySession.Callback {
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private val commandButtons: List<CommandButton> =
         listOf(
@@ -126,11 +130,9 @@ open class DemoMediaLibrarySessionCallback(val service: DemoPlaybackService) :
         session: MediaLibraryService.MediaLibrarySession,
         browser: MediaSession.ControllerInfo,
         mediaId: String,
-    ): ListenableFuture<LibraryResult<MediaItem>> {
-        MediaItemTree.getItem(mediaId)?.let {
-            return Futures.immediateFuture(LibraryResult.ofItem(it, /* params= */ null))
-        }
-        return Futures.immediateFuture(LibraryResult.ofError(SessionError.ERROR_BAD_VALUE))
+    ): ListenableFuture<LibraryResult<MediaItem>> = withLoadedTree {
+        MediaItemTree.getItem(mediaId)?.let { LibraryResult.ofItem(it, /* params= */ null) }
+            ?: LibraryResult.ofError(SessionError.ERROR_BAD_VALUE)
     }
 
     @OptIn(UnstableApi::class) // SessionError.ERROR_BAD_VALUE
@@ -141,21 +143,21 @@ open class DemoMediaLibrarySessionCallback(val service: DemoPlaybackService) :
         page: Int,
         pageSize: Int,
         params: MediaLibraryService.LibraryParams?,
-    ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
-        val children = MediaItemTree.getChildren(parentId)
-        if (children.isNotEmpty()) {
-            return Futures.immediateFuture(LibraryResult.ofItemList(children, params))
+    ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> = withLoadedTree {
+        // A known parent with no children (e.g. nothing saved yet) is an empty list, not an
+        // error; browsers may treat errors as a broken service.
+        if (MediaItemTree.getItem(parentId) != null) {
+            LibraryResult.ofItemList(MediaItemTree.getChildren(parentId), params)
+        } else {
+            LibraryResult.ofError(SessionError.ERROR_BAD_VALUE)
         }
-        return Futures.immediateFuture(LibraryResult.ofError(SessionError.ERROR_BAD_VALUE))
     }
 
     override fun onAddMediaItems(
         mediaSession: MediaSession,
         controller: MediaSession.ControllerInfo,
         mediaItems: List<MediaItem>,
-    ): ListenableFuture<List<MediaItem>> {
-        return Futures.immediateFuture(resolveMediaItems(mediaItems))
-    }
+    ): ListenableFuture<List<MediaItem>> = withLoadedTree { resolveMediaItems(mediaItems) }
 
     @OptIn(UnstableApi::class) // MediaSession.MediaItemsWithStartPosition
     override fun onSetMediaItems(
@@ -164,20 +166,15 @@ open class DemoMediaLibrarySessionCallback(val service: DemoPlaybackService) :
         mediaItems: List<MediaItem>,
         startIndex: Int,
         startPositionMs: Long,
-    ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
-        if (mediaItems.size == 1) {
-            // Try to expand a single item to a playlist.
-            maybeExpandSingleItemToPlaylist(mediaItems.first(), startIndex, startPositionMs)?.also {
-                return Futures.immediateFuture(it)
-            }
-        }
-        return Futures.immediateFuture(
-            MediaSession.MediaItemsWithStartPosition(
+    ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> = withLoadedTree {
+        // Try to expand a single item to a playlist.
+        mediaItems.singleOrNull()
+            ?.let { maybeExpandSingleItemToPlaylist(it, startIndex, startPositionMs) }
+            ?: MediaSession.MediaItemsWithStartPosition(
                 resolveMediaItems(mediaItems),
                 startIndex,
                 startPositionMs
             )
-        )
     }
 
     @OptIn(UnstableApi::class) // onPlaybackResumption callback + MediaItemsWithStartPosition
@@ -185,8 +182,7 @@ open class DemoMediaLibrarySessionCallback(val service: DemoPlaybackService) :
         mediaSession: MediaSession,
         controller: MediaSession.ControllerInfo,
     ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
-        super.onPlaybackResumption(mediaSession, controller)
-        return CoroutineScope(Dispatchers.Unconfined).future {
+        return withLoadedTree {
             service.retrieveLastStoredMediaItem()?.let {
                 var extras: Bundle? = null
                 if (it.durationMs != C.TIME_UNSET) {
@@ -219,12 +215,24 @@ open class DemoMediaLibrarySessionCallback(val service: DemoPlaybackService) :
                     startPositionMs = it.positionMs,
                 )
                     ?.let { safe ->
-                        return@future safe
+                        return@withLoadedTree safe
                     }
             }
-            throw IllegalStateException("previous media id not found")
+            // Failing (not an empty list) makes Media3 keep the player's current items.
+            throw IllegalStateException("No saved media item to resume")
         }
     }
+
+    /**
+     * Runs [block] once [MediaItemTree] holds the saved playlist, for when the service was started
+     * without Flutter. Main.immediate keeps [MediaItemTree] on the main thread and returns at once
+     * when the tree is already loaded.
+     */
+    private fun <T> withLoadedTree(block: suspend () -> T): ListenableFuture<T> =
+        scope.future {
+            PlaylistStore.ensureLoaded(service)
+            block()
+        }
 
     private fun resolveMediaItems(mediaItems: List<MediaItem>): List<MediaItem> {
         val playlist = mutableListOf<MediaItem>()
@@ -276,9 +284,9 @@ open class DemoMediaLibrarySessionCallback(val service: DemoPlaybackService) :
         browser: MediaSession.ControllerInfo,
         query: String,
         params: MediaLibraryService.LibraryParams?,
-    ): ListenableFuture<LibraryResult<Void>> {
+    ): ListenableFuture<LibraryResult<Void>> = withLoadedTree {
         session.notifySearchResultChanged(browser, query, MediaItemTree.search(query).size, params)
-        return Futures.immediateFuture(LibraryResult.ofVoid())
+        LibraryResult.ofVoid()
     }
 
     override fun onGetSearchResult(
@@ -288,13 +296,8 @@ open class DemoMediaLibrarySessionCallback(val service: DemoPlaybackService) :
         page: Int,
         pageSize: Int,
         params: MediaLibraryService.LibraryParams?,
-    ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
-        return Futures.immediateFuture(
-            LibraryResult.ofItemList(
-                MediaItemTree.search(query),
-                params
-            )
-        )
+    ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> = withLoadedTree {
+        LibraryResult.ofItemList(MediaItemTree.search(query), params)
     }
 
 

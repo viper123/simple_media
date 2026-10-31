@@ -32,4 +32,28 @@ message Preferences {
   // The duration of the last played item in milliseconds, or C.TIME_UNSET if
   // unknown.
   int64 duration_ms = 5;
+  // The last playlist loaded from Flutter, restored when the service starts without Flutter.
+  repeated PlaylistItem playlist = 6;
+  // Android Keystore AES-GCM encrypted `PlaylistHeaders` (12-byte IV + ciphertext). Empty when
+  // no playlist item opted in to persisting its headers.
+  bytes encrypted_headers = 7;
+}
+
+message PlaylistItem {
+  string id = 1;
+  string uri = 2;
+  string art_uri = 3;
+  string title = 4;
+  string album = 5;
+  map<string, string> extra = 6;
+}
+
+message PlaylistHeaders {
+  // Keyed by PlaylistItem.id.
+  map<string, Headers> items = 1;
+}
+
+message Headers {
+  map<string, string> uri_headers = 1;
+  map<string, string> art_headers = 2;
 }

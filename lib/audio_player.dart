@@ -227,6 +227,8 @@ class AudioPlayer {
         'extra': item.extra,
         'uriHeaders': item.uriHeaders,
         'artHeaders': item.artHeaders,
+        'persistUriHeaders': item.persistUriHeaders,
+        'persistArtHeaders': item.persistArtHeaders,
       };
     }).toList();
 
@@ -395,6 +397,8 @@ class AudioItem {
     Map<String, String>? extra,
     Map<String, String>? uriHeaders,
     Map<String, String>? artHeaders,
+    this.persistUriHeaders = false,
+    this.persistArtHeaders = false,
   })  : extra = extra == null ? null : Map.unmodifiable(extra),
         uriHeaders =
             uriHeaders == null ? null : Map.unmodifiable(uriHeaders),
@@ -410,6 +414,15 @@ class AudioItem {
   final Map<String, String>? uriHeaders;
   final Map<String, String>? artHeaders;
 
+  /// Android only. Opt in to saving [uriHeaders] on device (encrypted) so this item can still be
+  /// played after the app process is gone (e.g. playback resumption from the system media
+  /// controls). Off by default, since headers often carry credentials.
+  final bool persistUriHeaders;
+
+  /// Android only. Like [persistUriHeaders], for [artHeaders], so the artwork still loads in the
+  /// system media controls after the app process is gone.
+  final bool persistArtHeaders;
+
   static const _mapEquality = MapEquality<String, String>();
 
   @override
@@ -423,7 +436,9 @@ class AudioItem {
         other.album == album &&
         _mapEquality.equals(other.extra, extra) &&
         _mapEquality.equals(other.uriHeaders, uriHeaders) &&
-        _mapEquality.equals(other.artHeaders, artHeaders);
+        _mapEquality.equals(other.artHeaders, artHeaders) &&
+        other.persistUriHeaders == persistUriHeaders &&
+        other.persistArtHeaders == persistArtHeaders;
   }
 
   @override
@@ -436,6 +451,8 @@ class AudioItem {
     _mapEquality.hash(extra),
     _mapEquality.hash(uriHeaders),
     _mapEquality.hash(artHeaders),
+    persistUriHeaders,
+    persistArtHeaders,
   );
 
   @override
@@ -448,7 +465,9 @@ class AudioItem {
         'title: $title, '
         'album: $album, '
         'uriHeaders: $uriHeaders, '
-        'artHeaders: $artHeaders)';
+        'artHeaders: $artHeaders, '
+        'persistUriHeaders: $persistUriHeaders, '
+        'persistArtHeaders: $persistArtHeaders)';
   }
 }
 

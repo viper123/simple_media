@@ -5,21 +5,33 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.Build
 import androidx.annotation.OptIn
+import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.os.bundleOf
 import androidx.datastore.core.DataStore
+import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.Serializer
-import androidx.datastore.dataStore
 import androidx.media3.common.AudioAttributes
+import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DataSourceBitmapLoader
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.ResolvingDataSource
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.MediaSource
+import androidx.media3.exoplayer.upstream.CmcdConfiguration
 import androidx.media3.exoplayer.util.EventLogger
+import androidx.media3.extractor.text.SubtitleParser
+import androidx.media3.session.CacheBitmapLoader
 import androidx.media3.session.MediaConstants
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
@@ -31,9 +43,9 @@ import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
 import net.hevsoft.androidmedia.Preferences
 import net.hevsoft.media.R
+import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
-import android.content.Intent
 
 /**
  * Further improvements:
@@ -56,7 +68,7 @@ open class DemoPlaybackService : MediaLibraryService() {
             PluginInstallConfiguration.getAudioConfig()
                 ?: PersistentInstallConfiguration.getAudioConfig(this)
                     ?.also { PluginInstallConfiguration.installAudioConfig(it) }
-                ?: throw AudioConfigNotInstalledException()
+                        ?: throw AudioConfigNotInstalledException()
 
         initializeSessionAndPlayer()
         setListener(MediaSessionServiceListener())
@@ -76,6 +88,7 @@ open class DemoPlaybackService : MediaLibraryService() {
     private fun initializeSessionAndPlayer() {
         val player =
             ExoPlayer.Builder(this)
+                .setMediaSourceFactory(HeadersMediaSourceFactory(this))
                 .setAudioAttributes(AudioAttributes.DEFAULT, /* handleAudioFocus= */ true)
                 .build()
         player.addAnalyticsListener(EventLogger())
@@ -94,6 +107,7 @@ open class DemoPlaybackService : MediaLibraryService() {
 
         mediaLibrarySession =
             MediaLibrarySession.Builder(this, player, createLibrarySessionCallback())
+                .setBitmapLoader(createArtworkBitmapLoader())
                 .also { builder -> getSingleTopActivity()?.let { builder.setSessionActivity(it) } }
                 .build()
                 .also { mediaLibrarySession ->
@@ -108,6 +122,21 @@ open class DemoPlaybackService : MediaLibraryService() {
                 }
     }
 
+    @OptIn(UnstableApi::class)
+    private fun createArtworkBitmapLoader(): CacheBitmapLoader {
+        val dataSourceFactory =
+            ResolvingDataSource.Factory(DefaultDataSource.Factory(this)) { dataSpec ->
+                MediaItemTree.artHeaders(dataSpec.uri)?.let { dataSpec.withAdditionalHeaders(it) }
+                    ?: dataSpec
+            }
+        return CacheBitmapLoader(
+            DataSourceBitmapLoader(
+                DataSourceBitmapLoader.DEFAULT_EXECUTOR_SERVICE.get(),
+                dataSourceFactory
+            )
+        )
+    }
+
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
         stopSelf()
@@ -119,6 +148,7 @@ open class DemoPlaybackService : MediaLibraryService() {
      *
      * This method is called when the session is built by the [DemoPlaybackService].
      */
+    @OptIn(UnstableApi::class)
     protected open fun createLibrarySessionCallback(): MediaLibrarySession.Callback {
         return DemoMediaLibrarySessionCallback(this)
     }
@@ -156,10 +186,7 @@ open class DemoPlaybackService : MediaLibraryService() {
 
     @OptIn(UnstableApi::class) // BitmapLoader
     private fun storeCurrentMediaItem() {
-        val mediaID = mediaLibrarySession.player.currentMediaItem?.mediaId
-        if (mediaID == null) {
-            return
-        }
+        val mediaID = mediaLibrarySession.player.currentMediaItem?.mediaId ?: return
         val artworkUri = mediaLibrarySession.player.currentMediaItem?.mediaMetadata?.artworkUri
         val positionMs = mediaLibrarySession.player.currentPosition
         val durationMs = mediaLibrarySession.player.duration
@@ -200,7 +227,7 @@ open class DemoPlaybackService : MediaLibraryService() {
 
     suspend fun retrieveLastStoredMediaItem(): Preferences? {
         val preferences = PreferenceDataStore.get(this).data.first()
-        return if (preferences != Preferences.getDefaultInstance()) preferences else null
+        return if (preferences.mediaId.isNotEmpty()) preferences else null
     }
 
     @OptIn(UnstableApi::class)
@@ -211,6 +238,7 @@ open class DemoPlaybackService : MediaLibraryService() {
          * by a media controller to resume playback when the {@link MediaSessionService} is in the
          * background.
          */
+        @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
         override fun onForegroundServiceStartNotAllowedException() {
             if (
                 Build.VERSION.SDK_INT >= 33 &&
@@ -255,21 +283,67 @@ open class DemoPlaybackService : MediaLibraryService() {
     }
 
     object PreferenceDataStore {
-        private val Context._dataStore: DataStore<Preferences> by
-        dataStore(
-            fileName = "preferences.pb",
-            serializer =
-                object : Serializer<Preferences> {
-                    override val defaultValue: Preferences = Preferences.getDefaultInstance()
+        private var instance: DataStore<Preferences>? = null
 
-                    override suspend fun readFrom(input: InputStream): Preferences =
-                        Preferences.parseFrom(input)
+        // Kept in noBackupFilesDir so persisted headers (often credentials) never reach Auto
+        // Backup. The pre-0.2.0 `files/datastore/preferences.pb` is left alone: its generic name
+        // may belong to the host app.
+        @Synchronized
+        fun get(context: Context): DataStore<Preferences> = instance ?: DataStoreFactory.create(
+            serializer = object : Serializer<Preferences> {
+                override val defaultValue: Preferences = Preferences.getDefaultInstance()
 
-                    override suspend fun writeTo(t: Preferences, output: OutputStream) =
-                        t.writeTo(output)
-                },
+                override suspend fun readFrom(input: InputStream): Preferences =
+                    Preferences.parseFrom(input)
+
+                override suspend fun writeTo(t: Preferences, output: OutputStream) =
+                    t.writeTo(output)
+            },
+            produceFile = {
+                File(context.applicationContext.noBackupFilesDir, "simple_media_preferences.pb")
+            },
+        ).also { instance = it }
+    }
+}
+
+/**
+ * Builds each item's media source with its own data source so the item's `uriHeaders`
+ * are sent on every request it makes (including HLS/DASH segments, keys, redirects).
+ */
+@OptIn(UnstableApi::class)
+private class HeadersMediaSourceFactory(
+    private val context: Context,
+    private val default: DefaultMediaSourceFactory = DefaultMediaSourceFactory(context),
+) : MediaSource.Factory by default {
+    override fun setCmcdConfigurationFactory(cmcdConfigurationFactory: CmcdConfiguration.Factory): MediaSource.Factory {
+        return default.setCmcdConfigurationFactory(cmcdConfigurationFactory)
+    }
+
+    @Deprecated("Deprecated in Java")
+    @Suppress("DEPRECATION")
+    // Forwards the deprecated MediaSource.Factory method as-is.
+    override fun experimentalParseSubtitlesDuringExtraction(parseSubtitlesDuringExtraction: Boolean): MediaSource.Factory {
+        return default.experimentalParseSubtitlesDuringExtraction(parseSubtitlesDuringExtraction)
+    }
+
+    override fun setSubtitleParserFactory(subtitleParserFactory: SubtitleParser.Factory): MediaSource.Factory {
+        return default.setSubtitleParserFactory(subtitleParserFactory)
+    }
+
+    override fun experimentalSetCodecsToParseWithinGopSampleDependencies(
+        codecsToParseWithinGopSampleDependencies: Int
+    ): MediaSource.Factory {
+        return default.experimentalSetCodecsToParseWithinGopSampleDependencies(
+            codecsToParseWithinGopSampleDependencies
         )
+    }
 
-        fun get(context: Context) = context.applicationContext._dataStore
+    override fun createMediaSource(mediaItem: MediaItem): MediaSource {
+        @Suppress("UNCHECKED_CAST") // set by MediaItemTree.buildMediaItem
+        val headers = mediaItem.localConfiguration?.tag as? Map<String, String>
+            ?: return default.createMediaSource(mediaItem)
+        val httpFactory = DefaultHttpDataSource.Factory().setDefaultRequestProperties(headers)
+        return DefaultMediaSourceFactory(DefaultDataSource.Factory(context, httpFactory))
+            .createMediaSource(mediaItem)
     }
 }

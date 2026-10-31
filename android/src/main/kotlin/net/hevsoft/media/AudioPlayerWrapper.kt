@@ -40,8 +40,9 @@ import net.hevsoft.androidmedia.library.AudioConfiguration
 import net.hevsoft.androidmedia.library.AudioItem
 import net.hevsoft.androidmedia.library.AudioLibLog
 import net.hevsoft.androidmedia.library.MediaItemTree
-import net.hevsoft.androidmedia.library.PlaybackService
 import net.hevsoft.androidmedia.library.PersistentInstallConfiguration
+import net.hevsoft.androidmedia.library.PlaybackService
+import net.hevsoft.androidmedia.library.PlaylistStore
 import net.hevsoft.androidmedia.library.PluginInstallConfiguration
 import kotlin.coroutines.CoroutineContext
 
@@ -156,7 +157,14 @@ class AudioPlayerWrapper(
                     val playlist = parsePlaylist(playlistMaps)
 
                     MediaItemTree.setAudioItems(playlist)
-
+                    try {
+                        // Main.immediate starts the write-in call order, so the latest playlist wins.
+                        CoroutineScope(Dispatchers.Main.immediate).launch {
+                            PlaylistStore.save(context, playlist)
+                        }
+                    } catch (e: Exception) {
+                        AudioLibLog.e(tag, "Unable to save playlist", e)
+                    }
 
                     withController { controller ->
                         controller.setMediaItems(MediaItemTree.getChildren(MediaItemTree.getRootItem().mediaId))
@@ -498,6 +506,8 @@ class AudioPlayerWrapper(
                 val extra = map["extra"] as? Map<String, *>
                 val uriHeaders = map["uriHeaders"] as? Map<String, String>
                 val artHeaders = map["artHeaders"] as? Map<String, String>
+                val persistUriHeaders = map["persistUriHeaders"] as? Boolean ?: false
+                val persistArtHeaders = map["persistArtHeaders"] as? Boolean ?: false
 
                 val audioItem = AudioItem(
                     id = id,
@@ -507,7 +517,9 @@ class AudioPlayerWrapper(
                     album = album,
                     extra = extra,
                     uriHeaders = uriHeaders,
-                    artHeaders = artHeaders
+                    artHeaders = artHeaders,
+                    persistUriHeaders = persistUriHeaders,
+                    persistArtHeaders = persistArtHeaders
                 )
 
                 result.add(audioItem)

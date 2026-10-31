@@ -19,7 +19,7 @@ Example app (run from `example/`):
 Native iOS (run from `example/ios/`):
 - `pod install` — refresh CocoaPods after editing `simple_media.podspec` or bumping `Kingfisher`
 
-There are no Dart tests yet — `test/` and `integration_test/` are empty. Android unit tests are configured (`useJUnitPlatform`) but no test files exist.
+There are no Dart tests yet — `test/` and `integration_test/` are empty. Android unit tests live in `android/src/test/kotlin/` (JUnit Platform; Robolectric tests run via the vintage engine) and run from `example/android/` with `./gradlew :simple_media:testDebugUnitTest`. Instrumented tests (real Android Keystore, needs a device/emulator) live in `android/src/androidTest/kotlin/` and run with `./gradlew :simple_media:connectedDebugAndroidTest`.
 
 ## Architecture
 
