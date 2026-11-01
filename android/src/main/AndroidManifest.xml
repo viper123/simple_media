@@ -1,3 +1,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
   package="net.hevsoft.media">
+  <application>
+    <!-- Media3 receiver: starts PlaybackService and calls onPlaybackResumption when the
+         system (SystemUI "play last song", Bluetooth) sends a media button with no live session. -->
+    <receiver
+      android:name="androidx.media3.session.MediaButtonReceiver"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.intent.action.MEDIA_BUTTON" />
+      </intent-filter>
+    </receiver>
+  </application>
 </manifest>

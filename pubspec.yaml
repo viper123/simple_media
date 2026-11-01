@@ -1,6 +1,6 @@
 name: simple_media
 description: "A simple Flutter plugin to play Audio content. Supports background playback."
-version: 0.2.0
+version: 0.2.1
 homepage: hevsoft.go.ro
 
 environment:
