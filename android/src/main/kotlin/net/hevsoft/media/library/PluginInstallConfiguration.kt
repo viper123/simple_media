@@ -50,6 +50,19 @@ object PersistentInstallConfiguration {
         }
         return AudioConfiguration(prefs.getInt(KEY_NOTIFICATION_ID, 0), channelId, intentClass)
     }
+
+    /**
+     * Used when the system starts the service (media button, SystemUI resumption, Android Auto)
+     * before Flutter ever called `initAndroid`, e.g. right after install/update.
+     */
+    fun getDefaultAudioConfig(context: Context): AudioConfiguration? {
+        val className = context.packageManager
+            .getLaunchIntentForPackage(context.packageName)?.component?.className ?: return null
+        return AudioConfiguration(DEFAULT_NOTIFICATION_ID, DEFAULT_CHANNEL_ID, Class.forName(className))
+    }
+
+    private const val DEFAULT_NOTIFICATION_ID = 1001
+    private const val DEFAULT_CHANNEL_ID = "simple_media_playback"
 }
 
 data class AudioConfiguration(
